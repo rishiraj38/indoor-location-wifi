@@ -1,0 +1,24 @@
+\begin{table}[t]
+\centering
+\caption{Feature comparison. CV $=$ 5-fold GroupKFold by user on the training set (used to choose); test shown for reference only.}
+\label{tab:ablation}
+\resizebox{\columnwidth}{!}{%
+\begin{tabular}{lcccc}
+\toprule
+Features & CV IPIN & Test IPIN & Test B+F \% & Test err. (m) \\
+\midrule
+\multicolumn{5}{l}{\emph{Random Forest (per-building)}} \\
+raw dBm, not-heard = -105 & 15.23 & 9.70 & 91.18 & 9.31 \\
+positive (shifted so not-heard = 0) & 15.23 & 9.70 & 91.18 & 9.31 \\
+powed (compress weak signals) & 15.71 & 9.88 & 91.09 & 9.44 \\
+raw + heard/not-heard flags & 15.55 & 10.28 & 90.28 & 9.80 \\
+raw + flags + scan summary & 15.82 & 9.86 & 91.00 & 9.50 \\
+\midrule
+\multicolumn{5}{l}{\emph{k-NN (k=5)}} \\
+raw dBm, not-heard = -105 & 14.46 & 9.22 & 90.10 & 8.69 \\
+positive (shifted so not-heard = 0) & 14.46 & 9.22 & 90.10 & 8.69 \\
+powed (compress weak signals) & 17.60 & 8.58 & 93.43 & 8.19 \\
+raw + heard/not-heard flags & 14.54 & 9.20 & 90.01 & 8.66 \\
+\bottomrule
+\end{tabular}}
+\end{table}

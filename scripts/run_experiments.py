@@ -318,7 +318,7 @@ for i, (v, n) in enumerate(zip(g["mean"], g["size"])):
     ax.text(i, v, f"n={n}", ha="center", va="bottom", fontsize=8, color=INK_2)
 ax.set_xlabel("Access points heard in the scan")
 ax.set_ylabel("Mean position error (m)")
-ax.set_title("Fewer access points heard → bigger error")
+ax.set_title("Error is highest for very few APs, and rises again for phone-20-heavy bins")
 save(fig, "error_vs_aps_heard")
 
 summary = {"cleaning": clean_report, "n_folds": N_FOLDS, "best_params": best,
