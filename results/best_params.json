@@ -1,0 +1,9 @@
+{
+  "k-NN": {
+    "k": 5
+  },
+  "Random Forest": {
+    "max_features": "sqrt",
+    "n_estimators": 300
+  }
+}
