@@ -13,19 +13,19 @@ Produced by `scripts/make_processed_data.py`. The numbers are also saved in `dat
 The test file (`validationData.csv`) is not cleaned, so results can be compared with published work.
 
 Kept on purpose: 492 scans that contain a reading above -30 dBm (430 of them from phone 19). Such readings are
-unrealistic indoors, but removing them did not change the result (mean error 9.46 m without them vs 9.37 m with
+unrealistic indoors. But removing them did not change the result (mean error 9.46 m without them vs 9.37 m with
 them), so all of them stay in.
 
 ## Step 2: model-ready data (`train_model_ready.csv`, `test_model_ready.csv`)
 
 | Step | Detail | Reason |
 |---|---|---|
-| Replace +100 with -105 | -105 = weakest real reading in training (-104) minus 1 | +100 means "not heard", i.e. too weak; as a number it would look like the strongest signal |
+| Replace +100 with -105 | -105 = weakest real reading in training (-104) minus 1 | +100 means "not heard" (too weak). As a number it would look like the strongest signal |
 | Drop 55 APs | APs never heard in any training scan | They are -105 in every training row and carry no information |
 | Result | 465 AP columns + 9 information columns | |
 
 Both values (-105 and the list of kept APs) are learned from the training data only and then applied unchanged to
-the test data. This avoids leakage from the test set.
+the test data. This way no information from the test set leaks into training.
 
 ## Checks
 
