@@ -13,7 +13,7 @@
 
 \author{
 \IEEEauthorblockN{Rishi Raj (2401010380), Aditya Samadhiya (2401010037), Yash Yadav (2401010515),\\ Kaustubh Ranjan Mishra (2401020116), Yash Raj (2401010514)}
-\IEEEauthorblockA{Advanced Machine Learning --- Project 9, Phase 1\\
+\IEEEauthorblockA{Advanced Machine Learning, Project 9, Phase 1\\
 Section D, Rishihood University}
 }
 
@@ -29,10 +29,10 @@ linear/logistic regression, $k$-nearest neighbours and Random Forests, including
 Random Forest that first predicts the building and then uses a per-building model. All choices are made by
 5-fold cross-validation grouped by user, and the official validation file, collected four months
 later, is used only once as the test set. On the test set, the per-building Random Forest reaches 99.8\% building accuracy, 91.3\% floor accuracy and 9.37\,m
-mean position error (7.07\,m median). $k$-NN achieves the lowest mean error, 8.69\,m, and linear regression fails at
-positioning (52\,m), which shows that the signal-to-position mapping is strongly non-linear.
-We analyse the errors by building/floor correctness, by phone and by signal coverage, and identify the
-gap that Phase~2 (multitask deep learning) will address.
+mean position error (7.07\,m median). $k$-NN has the lowest mean error (8.69\,m). Linear regression does badly at
+positioning (52\,m), which shows that the mapping from signal to position is strongly non-linear.
+We also analyse the errors by building/floor correctness, by phone and by signal coverage, and point out
+what Phase~2 (multitask deep learning) should improve.
 \end{abstract}
 
 \begin{IEEEkeywords}
@@ -57,8 +57,8 @@ baseline. Our contributions are:
 selection uses cross-validation that holds out whole users;
 \item a comparison of linear/logistic regression, $k$-NN and Random Forests (plain and hierarchical) on
 building accuracy, floor accuracy, coordinate error and the IPIN competition score;
-\item a hierarchical error breakdown, floor confusion matrices, coordinate error maps and a per-phone
-robustness analysis.
+\item an error analysis with a building/floor breakdown, floor confusion matrices, coordinate error maps and
+errors per phone.
 \end{itemize}
 
 \section{Literature Review}
@@ -134,7 +134,7 @@ it must come from which APs are heard and how strongly.
 \textbf{Class balance and shift.} Training is fairly balanced over the 13 building--floor classes.
 The test set is skewed: 48\% of test scans are in building 0, compared with 27\% in training (Fig.~\ref{fig:balance}).
 Test phone proportions also differ (Fig.~\ref{fig:phones}), and 64\% of test scans come from phones
-never seen in training. This makes the test set a realistic \emph{new users, new devices, later date} evaluation.
+never seen in training. So the test set checks how well the models work for new users and new phones at a later date.
 
 \begin{figure}[t]
 \centering
@@ -196,7 +196,7 @@ mean and standard deviation of RSSI, and the IDs of the three strongest APs). Th
 cross-validation.
 
 \subsection{Models}
-\textbf{Centroid baseline.} Predicts the most common building and floor and the mean position. It gives a floor against which to measure the other models.
+\textbf{Centroid baseline.} Predicts the most common building and floor and the mean position. Any useful model should do better than this.
 
 \textbf{Linear and logistic regression.} Inputs are standardised with training statistics. Logistic
 regression (softmax, cross-entropy, L2, $C=1$) predicts building and floor. Ordinary least-squares linear
@@ -219,8 +219,8 @@ A regression leaf predicts the mean of real training positions, so predictions n
 
 \textbf{Plain vs.\ per-building (hierarchical).} The \emph{plain} variant trains three independent forests on all
 scans, as in the project brief. The \emph{per-building} variant predicts the building first, then sends the scan to a floor
-forest and a position forest trained only on that building's scans. This turns one global problem into three
-smaller, more homogeneous ones, at the risk that a wrong building prediction cascades to the floor and position.
+forest and a position forest trained only on that building's scans. This splits one large problem into three
+smaller and more similar ones. The downside is that a wrong building prediction also makes the floor and position wrong.
 
 \subsection{Validation protocol}
 Consecutive scans by the same user at the same spot are near-duplicates, so a random split would leak them. We use
@@ -261,8 +261,8 @@ Table~\ref{tab:main} and Fig.~\ref{fig:comparison} report the single evaluation 
 All learned models identify the building almost perfectly. Logistic regression even gets 100\%, because buildings
 use disjoint APs. On floor, the per-building Random Forest is best (91.3\%), ahead of the plain forest (90.9\%),
 $k$-NN (90.1\%) and logistic regression (88.7\%). For position, linear regression is unusable (52.0\,m), while
-$k$-NN (8.69\,m) and the per-building forest (9.37\,m) are close. The per-building design lowers the forest's error
-from 10.22\,m to 9.37\,m and its 95th-percentile error from 27.4\,m to 23.3\,m, the lowest tail of all models
+$k$-NN (8.69\,m) and the per-building forest (9.37\,m) are close. The per-building design lowers the forest's mean error
+from 10.22\,m to 9.37\,m and its 95th-percentile error from 27.4\,m to 23.3\,m, which is the lowest of all models
 (Fig.~\ref{fig:cdf}). For reference, the dataset paper's $k$-NN baseline reported 89.9\% floor accuracy and 7.9\,m mean
 error~\cite{torres2014uji}.
 
@@ -312,9 +312,9 @@ building--floors are building~2 floor~2 (17.6\,m) and floor~4 (16.2\,m).
 \end{figure}
 
 \textbf{Coverage and devices} (Figs.~\ref{fig:aps},~\ref{fig:phone}). Scans that hear 5 or fewer APs have the largest error (27.9\,m, $n=18$).
-Error also rises for scans that hear more than 25 APs: 105 of these 141 scans come from phone~20, a phone absent from training that
-hears more APs per scan than any other test phone (25 on average) and is itself one of the least accurate phones (13.2\,m). Across test phones, mean error ranges from 6.2\,m (phone~9)
-to 16.3\,m (phone~14), so device heterogeneity is a real source of error.
+Error also rises for scans that hear more than 25 APs. Of these 141 scans, 105 come from phone~20, which is not in the training data.
+This phone hears more APs per scan than any other test phone (25 on average), and it is one of the least accurate phones (13.2\,m). Across test phones, mean error ranges from 6.2\,m (phone~9)
+to 16.3\,m (phone~14), so differences between phones clearly add to the error.
 
 \begin{figure}[t]
 \centering
@@ -331,7 +331,7 @@ to 16.3\,m (phone~14), so device heterogeneity is a real source of error.
 \end{figure}
 
 \textbf{Outliers and importance.} Removing the 492 scans with readings above $-30$\,dBm did not help
-(9.46\,m vs.\ 9.37\,m), so the forest is already robust to them. Feature importance (Fig.~\ref{fig:importance}) shows that the
+(9.46\,m vs.\ 9.37\,m), so these readings do not seem to hurt the forest. Feature importance (Fig.~\ref{fig:importance}) shows that the
 building classifier spreads its importance over many APs instead of relying on a single one.
 
 \begin{figure}[t]
@@ -345,25 +345,25 @@ building classifier spreads its importance over many APs instead of relying on a
 \section{Discussion}
 \textbf{Why linear models fail at position but not at building.} Building identity is almost a linear function of which
 APs are heard, so a weighted sum separates it. Position is not: RSSI falls with the \emph{logarithm} of distance, walls cut it abruptly,
-and the same AP is ``east of you'' in one corridor and ``west'' in another. A single hyperplane cannot represent this. Trees and $k$-NN
-make local, piecewise decisions and therefore can.
+and the same AP is ``east of you'' in one corridor and ``west'' in another. A single hyperplane cannot model this, but trees and $k$-NN
+make local, piecewise decisions, so they can.
 
-\textbf{$k$-NN vs.\ Random Forest.} The two are close, and the ranking depends on the evaluation: $k$-NN is ahead in CV, and on
-test it has the lower mean (8.69\,m) and median (5.36\,m) error, while the per-building forest has the best floor accuracy and the lightest error
-tail on test. $k$-NN copies the positions of real neighbouring fingerprints, which works well when the radio map is dense. The forest
-learns which APs matter. We keep the Random Forest as the main model because the brief asks for it and it is strongest on floor, the hardest
-target on the test set, and we report $k$-NN alongside it.
+\textbf{$k$-NN vs.\ Random Forest.} The two are close, and which one wins depends on the evaluation. $k$-NN is ahead in CV. On the
+test set it has the lower mean (8.69\,m) and median (5.36\,m) error, while the per-building forest has the best floor accuracy and the smallest large
+errors. $k$-NN copies the positions of real neighbouring fingerprints, which works well when the radio map is dense. The forest
+learns which APs matter. We keep the Random Forest as the main model because the brief asks for it and it is best on floor, which is the hardest
+target on the test set. We report $k$-NN next to it.
 
 \textbf{CV vs.\ test.} CV is much harsher than test (floor accuracy about 72\% vs.\ 91\%; mean error 12--14\,m vs.\ 9\,m). We ruled out
 location coverage: 9.9\% of CV scans and 7.7\% of test scans are more than 5\,m from any training point. The likely cause is device novelty.
 In training, 17 of 18 users carried their own phone, so almost every CV validation scan comes from an unseen device, whereas 35.7\% of test
-scans come from phones seen in training. User-grouped CV is therefore a strict but honest selection criterion.
+scans come from phones seen in training. User-grouped CV is therefore harder than the test set, but it is still a fair way to choose models.
 
 \textbf{The gap for Phase 2.} All our models treat building, floor and position as separate tasks. The per-building forest links
 them only through a fixed cascade, and its two wrong-building scans are its worst errors. None of the models learns a representation of the 465 interacting APs that the three tasks could share.
 
 \section{Conclusion and Phase 2 Plan}
-We built a leakage-free machine learning pipeline for Wi-Fi indoor positioning on UJIIndoorLoc. The key data
+We built a leakage-free machine learning pipeline for Wi-Fi indoor positioning on UJIIndoorLoc. The main data
 decisions were to treat ``not detected'' as a very weak signal ($-105$\,dBm) fitted on training data only, and to validate by holding out
 whole users. Simple raw features were as good as the engineered variants. A per-building Random Forest reaches 99.8\%
 building accuracy, 91.3\% floor accuracy and 9.37\,m mean error on a test set collected months later with mostly unseen phones.
