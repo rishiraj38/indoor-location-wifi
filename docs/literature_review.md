@@ -1,4 +1,4 @@
-# Literature Review — Wi-Fi Fingerprinting for Indoor Location
+# Literature Review: Wi-Fi Fingerprinting for Indoor Location
 
 ## 1. Why indoor positioning is a learning problem
 
@@ -47,7 +47,7 @@ Seen this way, the online phase is supervised learning: input = RSSI vector, out
    different phones.
 3. **Independent targets.** Most ML baselines train separate models for building, floor and
    coordinates, so they cannot exploit the fact that the building constrains the floor and the
-   location. We compare an independent and a **hierarchical** (building → per-building model) design.
+   location. We compare an independent and a **hierarchical** (building first, then a per-building model) design.
    Phase 2 replaces this hand-built hierarchy with a learned shared representation (multitask MLP).
 4. **Device heterogeneity.** Different phones report different RSSI for the same place. We break
    down error by phone to measure this.

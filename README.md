@@ -1,6 +1,6 @@
 # Indoor Location Prediction Using Wi-Fi Signals
 
-**Advanced Machine Learning — Project 9, Phase 1 (Machine Learning)**
+Advanced Machine Learning, Project 9, Phase 1 (Section D)
 
 Predict which **building**, which **floor** and the **(x, y) position** a phone is at, using only the
 Wi-Fi signal strengths it measures. Dataset: [UJIIndoorLoc](https://archive.ics.uci.edu/dataset/310/ujiindoorloc)
@@ -30,7 +30,7 @@ Wi-Fi signal strengths it measures. Dataset: [UJIIndoorLoc](https://archive.ics.
 
 *IPIN score = position error + 50 m per wrong building + 4 m per wrong floor (lower is better).*
 
-**Takeaways**
+**Main findings**
 - Building is easy: most access points are heard in only one building.
 - Floor is the hard part. Mistakes are almost always between neighbouring floors, mostly floor 1 ↔ 2 in building 1.
 - Linear regression cannot place the phone (52 m error) because signal strength is not a linear function of position. Random Forest and k-NN can.
@@ -54,12 +54,12 @@ Wi-Fi signal strengths it measures. Dataset: [UJIIndoorLoc](https://archive.ics.
 ## Repository layout
 
 ```
-src/indoorloc/        data.py · features.py · models.py · metrics.py · plotting.py
-scripts/              download_data.py · run_eda.py · run_experiments.py · make_tables.py · build_notebook.py
-notebooks/            phase1_ml_baseline.ipynb   (executed walkthrough)
+src/indoorloc/        data.py, features.py, models.py, metrics.py, plotting.py
+scripts/              download_data.py, run_eda.py, run_experiments.py, make_tables.py
+notebooks/            phase1_ml_baseline.ipynb   (full walkthrough with all EDA, CV and plots)
 results/              CSV/JSON results and figures/
-report/               IEEE LaTeX report (main.tex → main.pdf)
-docs/                 literature_review.md · theory.md
+report/               IEEE LaTeX report (main.tex and main.pdf)
+docs/                 literature_review.md, theory.md
 ```
 
 ## How to run
@@ -68,6 +68,7 @@ docs/                 literature_review.md · theory.md
 python3 -m venv .venv && source .venv/bin/activate
 pip install -r requirements.txt
 python scripts/download_data.py      # fetch UJIIndoorLoc into data/raw/
+jupyter notebook notebooks/phase1_ml_baseline.ipynb   # whole project step by step
 python scripts/run_eda.py            # EDA figures, ~1 min
 python scripts/run_experiments.py    # all experiments and figures, ~25 min
 python scripts/make_tables.py        # LaTeX tables for the report
