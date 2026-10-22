@@ -1,4 +1,4 @@
-"""Exploratory data analysis: writes figures to results/figures and numbers to results/eda_summary.json."""
+"""EDA: saves figures to results/figures and numbers to results/eda_summary.json."""
 
 import json
 import sys
@@ -24,7 +24,7 @@ W_tr = train[WAP_COLS].to_numpy()
 W_te = test[WAP_COLS].to_numpy()
 heard_tr, heard_te = W_tr != NOT_DETECTED, W_te != NOT_DETECTED
 
-# ---------------------------------------------------------------- basic numbers
+# basic numbers
 summary["shape"] = {"train": list(train.shape), "test": list(test.shape)}
 summary["sparsity"] = {"train_missing_frac": float(1 - heard_tr.mean()),
                        "test_missing_frac": float(1 - heard_te.mean())}
@@ -50,12 +50,12 @@ summary["phones"] = {"train": sorted(train.PHONEID.unique().tolist()), "test": s
 summary["time"] = {s: [str(pd.to_datetime(d.TIMESTAMP.min(), unit="s").date()),
                        str(pd.to_datetime(d.TIMESTAMP.max(), unit="s").date())] for s, d in [("train", train), ("test", test)]}
 
-# APs are mostly local to one building: count how many buildings each AP is heard in.
+# Count how many buildings each AP is heard in (most are only in one).
 ap_buildings = np.array([train.loc[heard_tr[:, j], "BUILDINGID"].nunique() for j in range(len(WAP_COLS))])
 summary["aps_by_number_of_buildings_heard_in"] = {str(k): int((ap_buildings == k).sum()) for k in range(4)}
 
-# ---------------------------------------------------------------- figure: campus map
-# Plot in metres relative to the campus' south-west corner so axis labels stay readable.
+# figure: campus map
+# Plot in metres from the south-west corner so the axis numbers are readable.
 X0, Y0 = train.LONGITUDE.min(), train.LATITUDE.min()
 fig, axes = plt.subplots(1, 2, figsize=(11, 4.2), sharex=True, sharey=True)
 for ax, (name, d) in zip(axes, [("Training (cleaned)", train), ("Validation / test", test)]):
@@ -69,7 +69,7 @@ axes[0].set_ylabel("Metres north")
 axes[0].legend(markerscale=3, loc="upper right")
 save(fig, "eda_campus_map")
 
-# ---------------------------------------------------------------- figure: class balance
+# figure: class balance
 counts = pd.DataFrame({
     "Train": train.groupby(["BUILDINGID", "FLOOR"]).size(),
     "Test": test.groupby(["BUILDINGID", "FLOOR"]).size(),
@@ -86,7 +86,7 @@ ax.set_title("Building-floor class balance: test is skewed towards building 0")
 ax.legend()
 save(fig, "eda_class_balance")
 
-# ---------------------------------------------------------------- figure: RSSI distribution
+# figure: RSSI distribution
 fig, axes = plt.subplots(1, 2, figsize=(11, 3.6))
 bins = np.arange(-105, 1, 2)
 for d, h, c, lab in [(W_tr, heard_tr, SERIES[0], "Train"), (W_te, heard_te, SERIES[1], "Test")]:
@@ -103,7 +103,7 @@ axes[1].set_title(f"Each scan hears ~{heard_tr.sum(1).mean():.0f} APs: {100 * (1
 axes[1].legend()
 save(fig, "eda_rssi_distribution")
 
-# ---------------------------------------------------------------- figure: AP locality
+# figure: AP locality
 fig, axes = plt.subplots(1, 2, figsize=(11, 3.6))
 freq = np.sort(heard_tr.mean(0))[::-1] * 100
 axes[0].plot(np.arange(1, len(freq) + 1), freq, color=SERIES[0])
@@ -120,7 +120,7 @@ axes[1].set_ylabel("Number of APs")
 axes[1].set_title("Most APs are heard in only one building")
 save(fig, "eda_ap_locality")
 
-# ---------------------------------------------------------------- figure: floors per building
+# figure: floors per building
 fig, axes = plt.subplots(1, 3, figsize=(13, 4))
 for ax, b in zip(axes, range(3)):
     s = train[train.BUILDINGID == b]
@@ -136,7 +136,7 @@ fig.suptitle("Floors are stacked on the same (x, y) footprint, so floor must com
              fontsize=10, color=INK_2)
 save(fig, "eda_floors_per_building")
 
-# ---------------------------------------------------------------- figure: users and phones
+# figure: users and phones
 fig, axes = plt.subplots(1, 2, figsize=(11, 3.4))
 u = train.USERID.value_counts().sort_index()
 axes[0].bar(u.index.astype(str), u.values, color=SERIES[0])
@@ -154,7 +154,7 @@ axes[1].set_title("Test uses different phones in different proportions")
 axes[1].legend()
 save(fig, "eda_users_phones")
 
-# ---------------------------------------------------------------- figure: suspicious readings
+# figure: suspicious readings
 fig, ax = plt.subplots(figsize=(7, 3.4))
 by_phone = pd.Series(strong.any(1), index=train.index).groupby(train.PHONEID).mean() * 100
 ax.bar(by_phone.index.astype(str), by_phone.values, color=SERIES[0])
@@ -163,7 +163,7 @@ ax.set_ylabel("% scans with an RSSI above -30 dBm")
 ax.set_title("Implausibly strong readings come almost entirely from phone 19")
 save(fig, "eda_suspicious_readings")
 
-# ---------------------------------------------------------------- figure: PCA
+# figure: PCA
 fe = FingerprintFeatures(add_indicators=False, add_summary=False).fit(W_tr)
 pca = PCA(n_components=50, random_state=0).fit(fe.transform(W_tr))
 Z_tr, Z_te = pca.transform(fe.transform(W_tr)), pca.transform(fe.transform(W_te))
@@ -187,7 +187,7 @@ axes[1].set_ylabel("Cumulative variance explained (%)")
 axes[1].set_title("Variance is spread across many directions")
 save(fig, "eda_pca")
 
-# ---------------------------------------------------------------- figure: sparsity heatmap
+# figure: sparsity heatmap
 fig, ax = plt.subplots(figsize=(11, 3.2))
 order = np.argsort(train.BUILDINGID.to_numpy() * 10 + train.FLOOR.to_numpy(), kind="stable")
 idx = order[:: max(1, len(order) // 400)]

@@ -1,8 +1,8 @@
 """Location models.
 
-Each model exposes `fit(X_raw, y)` and `predict(X_raw) -> dict` with keys
-BUILDINGID, FLOOR, LONGITUDE, LATITUDE. Feature engineering lives inside the
-model so that cross-validation refits it on every training fold.
+Each model has fit(X_raw, y) and predict(X_raw), which returns a dict with
+BUILDINGID, FLOOR, LONGITUDE, LATITUDE. The features are built inside the
+model so they get refitted on each CV training fold.
 """
 
 import numpy as np
@@ -21,8 +21,8 @@ SEED = 42
 
 
 class EncodedClassifier:
-    """Maps arbitrary labels to 0..k-1 and handles the single-class case that
-    can occur inside one building's subset."""
+    """Encodes labels as 0..k-1. Also handles the case where only one class
+    is present (can happen inside one building)."""
 
     def __init__(self, estimator):
         self.estimator = estimator
@@ -42,8 +42,8 @@ class EncodedClassifier:
 
 
 class TwoTargetRegressor:
-    """Fits one regressor per coordinate. Coordinates are centred on the
-    training mean first, which keeps tree leaf values small and well scaled."""
+    """One regressor per coordinate. We subtract the training mean first
+    because the raw coordinates are very large numbers."""
 
     def __init__(self, estimator):
         self.estimator = estimator
@@ -59,15 +59,14 @@ class TwoTargetRegressor:
 
 
 def estimators(kind: str, **params):
-    """(classifier, regressor) pair for a model family."""
+    """Return (classifier, regressor) for the given model type."""
     if kind == "rf":
         common = dict(n_estimators=params.get("n_estimators", 300), n_jobs=-1, random_state=SEED,
                       max_features=params.get("max_features", "sqrt"))
         return RandomForestClassifier(**common), RandomForestRegressor(**common)
     if kind == "linear":
-        # Logistic regression for building/floor, ordinary least squares for
-        # coordinates. Standardising puts every AP on the same scale, which the
-        # logistic regression optimiser and its L2 penalty need.
+        # Logistic regression for building/floor, linear regression for
+        # coordinates. Scaling is needed for logistic regression to converge.
         return (make_pipeline(StandardScaler(), LogisticRegression(C=params.get("C", 1.0), max_iter=2000)),
                 make_pipeline(StandardScaler(), LinearRegression()))
     if kind == "knn":
@@ -81,8 +80,8 @@ COORDS = ["LONGITUDE", "LATITUDE"]
 
 
 class IndependentModel:
-    """AML baseline from the brief: one classifier for building, one for floor
-    and one regressor for coordinates, each trained on every scan."""
+    """Baseline from the brief: separate models for building, floor and
+    coordinates, all trained on every scan."""
 
     def __init__(self, kind="rf", features=None, **params):
         self.kind, self.params = kind, params
@@ -105,11 +104,10 @@ class IndependentModel:
 
 
 class HierarchicalModel:
-    """Predict building first, then route each scan to a floor classifier and
-    coordinate regressor trained only on that building's scans.
+    """Predict the building first, then use floor and coordinate models
+    trained only on that building's scans.
 
-    Buildings are far apart and share few access points, so a per-building
-    model solves a much easier, more local problem.
+    Buildings share few APs, so each per-building model has an easier job.
     """
 
     def __init__(self, kind="rf", features=None, **params):
@@ -144,7 +142,7 @@ class HierarchicalModel:
 
 
 class CentroidBaseline:
-    """Sanity floor: majority building/floor, mean coordinates."""
+    """Dumb baseline: most common building/floor and the mean coordinates."""
 
     def fit(self, X, y):
         self.b_ = y["BUILDINGID"].mode()[0]

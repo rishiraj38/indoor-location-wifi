@@ -1,22 +1,20 @@
-"""Evaluation metrics, including the hierarchical error breakdown."""
+"""Evaluation metrics."""
 
 import numpy as np
 import pandas as pd
 
 
 def positioning_errors(y_true: pd.DataFrame, pred: dict) -> np.ndarray:
-    """Euclidean 2-D error in metres (coordinates are UTM-like, in metres)."""
+    """2-D distance error in metres (the coordinates are already in metres)."""
     dx = y_true["LONGITUDE"].to_numpy() - pred["LONGITUDE"]
     dy = y_true["LATITUDE"].to_numpy() - pred["LATITUDE"]
     return np.hypot(dx, dy)
 
 
 def summarize(y_true: pd.DataFrame, pred: dict) -> dict:
-    """All headline numbers for one model on one split.
+    """Main metrics for one model on one split.
 
-    `pred` holds arrays keyed BUILDINGID, FLOOR, LONGITUDE, LATITUDE.
-    The IPIN 2015 competition score adds 50 m per wrong building and 4 m per
-    wrong floor to the 2-D error, so one number reflects all three targets.
+    IPIN 2015 score = 2-D error + 50 m per wrong building + 4 m per wrong floor.
     """
     b_ok = y_true["BUILDINGID"].to_numpy() == pred["BUILDINGID"]
     f_ok = y_true["FLOOR"].to_numpy() == pred["FLOOR"]
@@ -36,11 +34,8 @@ def summarize(y_true: pd.DataFrame, pred: dict) -> dict:
 
 
 def hierarchical_breakdown(y_true: pd.DataFrame, pred: dict) -> pd.DataFrame:
-    """Coordinate error split by whether building and floor were right.
-
-    This shows how much of the positioning error is caused by upstream
-    classification mistakes versus genuine within-floor regression error.
-    """
+    """Coordinate error split by whether building and floor were right,
+    to see how much error comes from getting the building/floor wrong."""
     b_ok = y_true["BUILDINGID"].to_numpy() == pred["BUILDINGID"]
     f_ok = y_true["FLOOR"].to_numpy() == pred["FLOOR"]
     err = positioning_errors(y_true, pred)
@@ -55,7 +50,7 @@ def hierarchical_breakdown(y_true: pd.DataFrame, pred: dict) -> pd.DataFrame:
 
 
 def per_group_error(y_true: pd.DataFrame, pred: dict, groups: pd.Series) -> pd.DataFrame:
-    """Accuracy and error per building, floor, phone etc."""
+    """Accuracy and error per group (building, floor, phone, ...)."""
     b_ok = y_true["BUILDINGID"].to_numpy() == pred["BUILDINGID"]
     f_ok = y_true["FLOOR"].to_numpy() == pred["FLOOR"]
     df = pd.DataFrame({

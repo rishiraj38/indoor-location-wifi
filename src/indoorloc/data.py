@@ -22,10 +22,10 @@ def load_raw(split: str) -> pd.DataFrame:
 
 
 def clean_train(df: pd.DataFrame) -> tuple[pd.DataFrame, dict]:
-    """Remove rows that carry no usable signal.
+    """Drop duplicate rows and scans where no AP was heard.
 
-    Only the training set is cleaned; the test set is left exactly as published
-    so results stay comparable with the literature.
+    We only clean the training set. The test set is kept as published so our
+    numbers can be compared with other papers.
     """
     report = {"rows_in": len(df)}
 
@@ -50,7 +50,7 @@ def split_xy(df: pd.DataFrame):
 
 
 def load_splits():
-    """Cleaned training set and untouched test set, ready for modelling."""
+    """Load the cleaned train set and the original test set."""
     train, report = clean_train(load_raw("train"))
     test = load_raw("test")
     return train, test, report

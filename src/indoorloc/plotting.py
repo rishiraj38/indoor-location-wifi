@@ -1,4 +1,4 @@
-"""Shared matplotlib style so every figure in the report looks the same."""
+"""Common matplotlib style for all report figures."""
 
 from pathlib import Path
 
@@ -21,7 +21,7 @@ SURFACE = "#fcfcfb"
 SERIES = ["#2a78d6", "#eb6834", "#1baf7a", "#eda100", "#e87ba4", "#008300", "#6250d6", "#e34948"]
 BUILDING_COLORS = {0: SERIES[0], 1: SERIES[1], 2: SERIES[2]}
 
-# Single-hue blue ramp for magnitude (heatmaps, error maps) and ordinal floors.
+# Blue shades for heatmaps, error maps and floors.
 BLUE_RAMP = ["#cde2fb", "#9ec5f4", "#6da7ec", "#3987e5", "#256abf", "#184f95", "#0d366b"]
 SEQ = LinearSegmentedColormap.from_list("seq_blue", BLUE_RAMP)
 FLOOR_COLORS = ["#86b6ef", "#5598e7", "#2a78d6", "#1c5cab", "#0d366b"]
