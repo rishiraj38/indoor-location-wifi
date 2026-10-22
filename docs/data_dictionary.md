@@ -4,6 +4,8 @@ Source: UJIIndoorLoc, UCI Machine Learning Repository (dataset 310), collected a
 
 ## Files
 
+These files are created locally by `scripts/download_data.py` and `scripts/make_processed_data.py`; they are not stored in the repo.
+
 | File | Rows | Columns | Description |
 |---|---|---|---|
 | `data/raw/UJIndoorLoc/trainingData.csv` | 19,937 | 529 | Original training file, unchanged |
