@@ -54,12 +54,14 @@ Wi-Fi signal strengths it measures. Dataset: [UJIIndoorLoc](https://archive.ics.
 ## Repository layout
 
 ```
+data/raw/             original UJIIndoorLoc CSV files
+data/processed/       cleaned and model-ready CSV files
 src/indoorloc/        data.py, features.py, models.py, metrics.py, plotting.py
-scripts/              download_data.py, run_eda.py, run_experiments.py, make_tables.py
+scripts/              download_data.py, make_processed_data.py, run_eda.py, run_experiments.py, make_tables.py
 notebooks/            phase1_ml_baseline.ipynb   (full walkthrough with all EDA, CV and plots)
 results/              CSV/JSON results and figures/
 report/               IEEE LaTeX report (main.tex and main.pdf)
-docs/                 literature_review.md, theory.md
+docs/                 data_dictionary.md, cleaning_log.md, literature_review.md, theory.md
 ```
 
 ## How to run
@@ -67,7 +69,8 @@ docs/                 literature_review.md, theory.md
 ```bash
 python3 -m venv .venv && source .venv/bin/activate
 pip install -r requirements.txt
-python scripts/download_data.py      # fetch UJIIndoorLoc into data/raw/
+python scripts/download_data.py      # only needed if data/raw/ is missing
+python scripts/make_processed_data.py # rebuild data/processed/
 jupyter notebook notebooks/phase1_ml_baseline.ipynb   # whole project step by step
 python scripts/run_eda.py            # EDA figures, ~1 min
 python scripts/run_experiments.py    # all experiments and figures, ~25 min
