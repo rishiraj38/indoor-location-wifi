@@ -1,0 +1,77 @@
+# Indoor Location Prediction Using Wi-Fi Signals
+
+**Advanced Machine Learning — Project 9, Phase 1 (Machine Learning)**
+
+Predict which **building**, which **floor** and the **(x, y) position** a phone is at, using only the
+Wi-Fi signal strengths it measures. Dataset: [UJIIndoorLoc](https://archive.ics.uci.edu/dataset/310/ujiindoorloc)
+(3 buildings, 13 floors in total, 520 access points, 21,048 scans).
+
+![Campus map](results/figures/eda_campus_map.png)
+
+## Results (official test set, 1,111 scans)
+
+| Model | Building acc. | Floor acc. | Mean error | Median error | IPIN score |
+|---|---|---|---|---|---|
+| Centroid (guess the average) | 24.1% | 15.5% | 142.75 m | 167.37 m | 184.07 |
+| Linear + Logistic Regression | **100.0%** | 88.7% | 51.99 m | 37.53 m | 52.45 |
+| k-NN (k = 5) | 99.7% | 90.1% | **8.69 m** | **5.36 m** | **9.22** |
+| Random Forest | 99.8% | 90.9% | 10.22 m | 7.63 m | 10.68 |
+| **Random Forest (per-building)** | 99.8% | **91.3%** | 9.37 m | 7.07 m | 9.81 |
+
+*IPIN score = position error + 50 m per wrong building + 4 m per wrong floor (lower is better).*
+
+**Takeaways**
+- Building is easy: most access points are heard in only one building.
+- Floor is the hard part. Mistakes are almost always between neighbouring floors, mostly floor 1 ↔ 2 in building 1.
+- Linear regression cannot place the phone (52 m error) because signal strength is not a linear function of position. Random Forest and k-NN can.
+- Training a separate floor and position model for each building (per-building RF) beats one global forest: 9.37 m vs 10.22 m.
+- k-NN and the per-building Random Forest are close. k-NN is ahead in cross-validation, and the forest has the best floor accuracy on the test set.
+
+| Floor confusion (per-building RF) | Error map |
+|---|---|
+| ![](results/figures/confusion_floor_rf.png) | ![](results/figures/error_map_rf.png) |
+
+## What we did
+
+1. **Cleaning:** removed 637 duplicate rows and 73 scans with no access point heard (training set only; the test set is untouched).
+2. **EDA:** 96.5% of readings are "not heard", a scan hears about 18 of 520 access points, most access points belong to one building, the test set comes from 4 months later with mostly new phones, and phone 19 gives faulty readings. See `results/figures/eda_*.png`.
+3. **Missing values:** the dataset stores "not heard" as **+100**, which would look like the strongest possible signal. We replace it with **−105 dBm**, just below the weakest real reading. The value is learned from training data only.
+4. **Feature comparison:** raw dBm vs shifted vs "powed" vs heard/not-heard flags vs per-scan summary features. Cross-validation picked the simplest version (raw).
+5. **Models:** centroid baseline, Linear + Logistic Regression, k-NN, Random Forest (plain and per-building).
+6. **Fair validation:** 5-fold **GroupKFold by user** on the training set for every choice (features, k, max_features). The official validation file is used **once** as the test set.
+7. **Error analysis:** error split by building/floor correctness, floor confusion matrices, error maps, error per phone, error vs number of access points heard, feature importance, outlier check.
+
+## Repository layout
+
+```
+src/indoorloc/        data.py · features.py · models.py · metrics.py · plotting.py
+scripts/              download_data.py · run_eda.py · run_experiments.py · make_tables.py · build_notebook.py
+notebooks/            phase1_ml_baseline.ipynb   (executed walkthrough)
+results/              CSV/JSON results and figures/
+report/               IEEE LaTeX report (main.tex → main.pdf)
+docs/                 literature_review.md · theory.md
+```
+
+## How to run
+
+```bash
+python3 -m venv .venv && source .venv/bin/activate
+pip install -r requirements.txt
+python scripts/download_data.py      # fetch UJIIndoorLoc into data/raw/
+python scripts/run_eda.py            # EDA figures, ~1 min
+python scripts/run_experiments.py    # all experiments and figures, ~25 min
+python scripts/make_tables.py        # LaTeX tables for the report
+cd report && tectonic main.tex       # build the PDF (or upload the folder to Overleaf)
+```
+
+All randomness is seeded (`random_state=42`).
+
+## Phase 2 (next)
+
+A **multitask neural network**: one shared network trunk with three heads (building, floor, position), compared with these
+baselines on the same split and metrics.
+
+## References
+
+See [`docs/literature_review.md`](docs/literature_review.md). Key sources: Torres-Sospedra et al., *UJIIndoorLoc* (IPIN 2014);
+Breiman, *Random Forests* (2001); Caruana, *Multitask Learning* (1997).
