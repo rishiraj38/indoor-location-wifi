@@ -1,5 +1,14 @@
 # Data
 
+The data files are not stored in the repo. Create them with:
+
+```bash
+python scripts/download_data.py       # downloads data/raw/
+python scripts/make_processed_data.py  # creates data/processed/
+```
+
+This gives:
+
 ```
 data/
 ├── raw/UJIndoorLoc/
@@ -14,8 +23,6 @@ data/
 
 - Column meanings: [`docs/data_dictionary.md`](../docs/data_dictionary.md)
 - What was removed or changed and why: [`docs/cleaning_log.md`](../docs/cleaning_log.md)
-- To rebuild the processed files: `python scripts/make_processed_data.py`
-- To download the raw files again: `python scripts/download_data.py`
 
 Source: UJIIndoorLoc, UCI Machine Learning Repository, https://archive.ics.uci.edu/dataset/310/ujiindoorloc
 (Torres-Sospedra et al., IPIN 2014).
