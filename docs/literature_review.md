@@ -2,55 +2,57 @@
 
 ## 1. Why indoor positioning is a learning problem
 
-GPS does not work reliably indoors: walls and ceilings block and reflect the satellite signal. Buildings
-already contain Wi-Fi access points (APs), and a phone can measure the **received signal strength
-indicator (RSSI)** of every AP it hears without connecting to any of them. RSSI drops with distance,
-but indoors the drop also depends on walls, floors, furniture, people and multipath reflections, so
-closed-form propagation models (log-distance path loss, trilateration) are inaccurate [Zafari 2019].
+GPS does not work well indoors, because walls and ceilings block and reflect the satellite signal.
+But most buildings already have Wi-Fi access points (APs). A phone can measure the received signal
+strength indicator (RSSI) of every AP it hears, without connecting to any of them. RSSI drops with
+distance. Indoors, though, it also depends on walls, floors, furniture, people and signals bouncing
+around (multipath). Because of this, formula-based propagation models (log-distance path loss,
+trilateration) are not very accurate indoors [Zafari 2019].
 
-**Fingerprinting** avoids modelling propagation at all:
+Fingerprinting does not try to model how the signal travels. It works in two phases:
 
-1. *Offline phase.* Walk the building, and at known positions record the vector of RSSI values from
-   every AP. This is the radio map (the training set).
-2. *Online phase.* A new scan is compared with the radio map and the location is inferred from the
-   most similar fingerprints.
+1. Offline phase. Walk around the building and, at known positions, record the RSSI value of every
+   AP. This collection is called the radio map (our training set).
+2. Online phase. Compare a new scan with the radio map and guess the location from the most similar
+   fingerprints.
 
-Seen this way, the online phase is supervised learning: input = RSSI vector, outputs = building
-(classification), floor (classification) and (x, y) coordinates (regression).
+So the online phase is a supervised learning problem. The input is the RSSI vector. The outputs are
+the building (classification), the floor (classification) and the (x, y) coordinates (regression).
 
-## 2. Key prior work
+## 2. Main prior work
 
-| Work | Contribution | Relevance to us |
+| Work | What it did | Why it matters for us |
 |---|---|---|
-| **Bahl & Padmanabhan, RADAR (INFOCOM 2000)** | First Wi-Fi fingerprinting system; nearest neighbour in signal space; ~2–3 m median error in one floor. | Origin of the k-NN fingerprinting baseline we use. |
-| **Youssef & Agrawala, Horus (MobiSys 2005)** | Probabilistic fingerprinting: models the RSSI distribution per location instead of one mean value. | Shows RSSI is noisy; motivates robust features and ensembles. |
-| **Torres-Sospedra et al., UJIIndoorLoc (IPIN 2014)** | Publishes our dataset: 3 buildings, 4–5 floors, 520 APs, 25 phones, 18 users; k-NN baseline gives 89.9% floor hit rate and 7.9 m mean error. | Our dataset; defines the train/validation split and the +100 "not detected" convention. |
-| **Torres-Sospedra et al., Expert Syst. Appl. 2015** | Compares 51 distance metrics and 4 data representations (positive, normalized, exponential, powed) for k-NN. The *powed* representation with Sørensen/Euclidean distance works best. | Source of our `positive` and `powed` features; we test whether the gain carries over to trees. |
-| **Torres-Sospedra et al., IPIN 2016 competition (Sensors 2017)** | Common evaluation: 2-D error + 50 m per wrong building + 4 m per wrong floor. | We report this "IPIN score" so all three targets are summarised in one number. |
-| **Bozkurt et al. (INISTA 2015)** | Compares k-NN, decision trees, naive Bayes, Bagging, AdaBoost etc. on UJIIndoorLoc; k-NN and ensembles are strongest. | Supports k-NN and tree ensembles as the right ML baselines. |
-| **Akram et al., HybLoc (IEEE Access 2018)** | Clusters the radio map, then trains a random forest per cluster. | Same idea as our hierarchical model: split the problem, solve smaller local ones. |
-| **Breiman, Random Forests (2001)** | Bagged decorrelated trees; variance reduction; built-in feature importance. | Our main tree model. |
-| **Cover & Hart (1967)** | Nearest-neighbour classification; 1-NN error is at most twice the best possible (Bayes) error. | Theory behind k-NN. |
-| **Caruana, Multitask Learning (1997)** | Training related tasks with a shared representation improves generalisation through inductive transfer. | Motivates Phase 2: a shared network for building, floor and coordinates. |
-| **Nowicki & Wietrzykowski (2017); Kim et al. (2018)** | Stacked autoencoder + MLP on UJIIndoorLoc for building/floor (Kim et al. use one multi-label output). | Deep learning baselines for Phase 2. |
-| **Song et al., CNNLoc (IEEE Access 2019)** | Autoencoder + 1-D CNN; ~96% floor accuracy on UJIIndoorLoc. | Upper reference point for what DL achieves. |
+| Bahl & Padmanabhan, RADAR (INFOCOM 2000) | First Wi-Fi fingerprinting system. Uses nearest neighbour in signal space. Median error of about 2 to 3 m on one floor. | Where the k-NN fingerprinting baseline we use comes from. |
+| Youssef & Agrawala, Horus (MobiSys 2005) | Probabilistic fingerprinting. Models the RSSI distribution at each location instead of one mean value. | Shows that RSSI is noisy, which is a reason to use stable features and ensembles. |
+| Torres-Sospedra et al., UJIIndoorLoc (IPIN 2014) | Publishes our dataset: 3 buildings, 4 to 5 floors, 520 APs, 25 phones, 18 users. Their k-NN baseline gets an 89.9% floor hit rate and 7.9 m mean error. | Our dataset. It defines the train/validation split and the +100 "not detected" value. |
+| Torres-Sospedra et al., Expert Syst. Appl. 2015 | Compares 51 distance metrics and 4 data representations (positive, normalized, exponential, powed) for k-NN. The powed representation with Sørensen or Euclidean distance works best. | Where our `positive` and `powed` features come from. We test if the gain also shows up with trees. |
+| Torres-Sospedra et al., IPIN 2016 competition (Sensors 2017) | A shared way to evaluate: 2-D error + 50 m per wrong building + 4 m per wrong floor. | We report this "IPIN score" so all three targets fit in one number. |
+| Bozkurt et al. (INISTA 2015) | Compares k-NN, decision trees, naive Bayes, Bagging, AdaBoost and others on UJIIndoorLoc. k-NN and ensembles do best. | Backs up our choice of k-NN and tree ensembles as baselines. |
+| Akram et al., HybLoc (IEEE Access 2018) | Splits the radio map into clusters, then trains a random forest for each cluster. | Same idea as our hierarchical model: break the problem into smaller local ones. |
+| Breiman, Random Forests (2001) | Bagged trees that are made less correlated. Lowers variance and gives feature importance for free. | Our main tree model. |
+| Cover & Hart (1967) | Nearest-neighbour classification. The 1-NN error is at most twice the best possible (Bayes) error. | The theory behind k-NN. |
+| Caruana, Multitask Learning (1997) | Training related tasks with a shared representation helps the model generalise, because what it learns for one task carries over to the others (inductive transfer). | The reason for Phase 2: one shared network for building, floor and coordinates. |
+| Nowicki & Wietrzykowski (2017); Kim et al. (2018) | Stacked autoencoder + MLP on UJIIndoorLoc for building and floor (Kim et al. use one multi-label output). | Deep learning baselines for Phase 2. |
+| Song et al., CNNLoc (IEEE Access 2019) | Autoencoder + 1-D CNN. About 96% floor accuracy on UJIIndoorLoc. | A reference for how well deep learning can do. |
 
-## 3. Gaps that shape our design
+## 3. Gaps that shaped our design
 
-1. **Missing values are not missing at random.** "Not heard" means the signal is below the phone's
-   sensitivity, so the RSSI is *very weak*, not unknown. Treating +100 as a number (as naive
-   pipelines do) tells a model that undetected APs are the strongest. We impute just below the weakest
-   observed value and add explicit "heard" indicators.
-2. **Evaluation leakage.** Random K-fold splits put scans from the same walk, user and phone in both
-   train and validation and overstate accuracy. We tune with **GroupKFold by user** and test on the
-   official validation file, which was collected 4 months later by different users with partly
-   different phones.
-3. **Independent targets.** Most ML baselines train separate models for building, floor and
-   coordinates, so they cannot exploit the fact that the building constrains the floor and the
-   location. We compare an independent and a **hierarchical** (building first, then a per-building model) design.
-   Phase 2 replaces this hand-built hierarchy with a learned shared representation (multitask MLP).
-4. **Device heterogeneity.** Different phones report different RSSI for the same place. We break
-   down error by phone to measure this.
+1. Missing values are not missing at random. "Not heard" means the signal is below what the phone
+   can pick up, so the real value is very weak, not unknown. If a pipeline treats +100 as a normal
+   number, the model thinks undetected APs are the strongest ones. We fill in a value just below the
+   weakest observed one. We also tested adding "heard" indicator columns, but they did not help.
+2. Evaluation leakage. Random K-fold splits put scans from the same walk, user and phone into both
+   train and validation, so the accuracy looks better than it really is. We tune with GroupKFold by
+   user. We test on the official validation file, which was collected 4 months later by different
+   users, partly with different phones.
+3. Independent targets. Most ML baselines train separate models for building, floor and
+   coordinates. They cannot use the fact that the building limits which floors and locations are
+   possible. We compare an independent design with a hierarchical one (building first, then a model
+   for each building). In Phase 2 we replace this hand-built hierarchy with a shared representation
+   that the model learns (multitask MLP).
+4. Different devices. Different phones report different RSSI values at the same place. We split
+   the error by phone to measure this.
 
 ## References
 

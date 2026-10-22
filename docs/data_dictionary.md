@@ -12,14 +12,14 @@ These files are created locally by `scripts/download_data.py` and `scripts/make_
 | `data/raw/UJIndoorLoc/validationData.csv` | 1,111 | 529 | Original validation file, used as our test set, unchanged |
 | `data/processed/train_cleaned.csv` | 19,227 | 529 | Training file after removing duplicates and empty scans |
 | `data/processed/train_model_ready.csv` | 19,227 | 474 | Cleaned training data with +100 replaced by -105 and 55 never-heard APs dropped |
-| `data/processed/test_model_ready.csv` | 1,111 | 474 | Test data with the same transformation (learned on training data) |
+| `data/processed/test_model_ready.csv` | 1,111 | 474 | Test data with the same transformation (values learned from the training data) |
 | `data/processed/processing_info.json` | | | Row counts, the value used for "not heard" and the list of dropped APs |
 
 ## Columns
 
 | Column | Type | Range | Meaning |
 |---|---|---|---|
-| `WAP001` ... `WAP520` | integer | -104 to 0, or +100 | Signal strength (RSSI) in dBm from each Wi-Fi access point. Closer to 0 is stronger. **+100 = not detected** |
+| `WAP001` ... `WAP520` | integer | -104 to 0, or +100 | Signal strength (RSSI) in dBm from each Wi-Fi access point. Closer to 0 is stronger. +100 means not detected |
 | `LONGITUDE` | float | -7696 to -7300 | Position in metres (UTM projection), east-west |
 | `LATITUDE` | float | 4864745 to 4865017 | Position in metres (UTM projection), north-south |
 | `FLOOR` | integer | 0 to 4 | Floor number |
