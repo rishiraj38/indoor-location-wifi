@@ -10,9 +10,10 @@ import pandas as pd
 from sklearn.base import clone
 from sklearn.dummy import DummyClassifier
 from sklearn.ensemble import RandomForestClassifier, RandomForestRegressor
+from sklearn.linear_model import LinearRegression, LogisticRegression
 from sklearn.neighbors import KNeighborsClassifier, KNeighborsRegressor
-from sklearn.preprocessing import LabelEncoder
-from xgboost import XGBClassifier, XGBRegressor
+from sklearn.pipeline import make_pipeline
+from sklearn.preprocessing import LabelEncoder, StandardScaler
 
 from .features import FingerprintFeatures
 
@@ -20,8 +21,8 @@ SEED = 42
 
 
 class EncodedClassifier:
-    """Maps arbitrary labels to 0..k-1 (XGBoost requires it) and handles the
-    single-class case that can occur inside one building's subset."""
+    """Maps arbitrary labels to 0..k-1 and handles the single-class case that
+    can occur inside one building's subset."""
 
     def __init__(self, estimator):
         self.estimator = estimator
@@ -63,12 +64,12 @@ def estimators(kind: str, **params):
         common = dict(n_estimators=params.get("n_estimators", 300), n_jobs=-1, random_state=SEED,
                       max_features=params.get("max_features", "sqrt"))
         return RandomForestClassifier(**common), RandomForestRegressor(**common)
-    if kind == "xgb":
-        common = dict(n_estimators=params.get("n_estimators", 400), max_depth=params.get("max_depth", 8),
-                      learning_rate=params.get("learning_rate", 0.1), subsample=0.8,
-                      colsample_bytree=params.get("colsample_bytree", 0.5), tree_method="hist",
-                      n_jobs=-1, random_state=SEED)
-        return XGBClassifier(**common), XGBRegressor(**common)
+    if kind == "linear":
+        # Logistic regression for building/floor, ordinary least squares for
+        # coordinates. Standardising puts every AP on the same scale, which the
+        # logistic regression optimiser and its L2 penalty need.
+        return (make_pipeline(StandardScaler(), LogisticRegression(C=params.get("C", 1.0), max_iter=2000)),
+                make_pipeline(StandardScaler(), LinearRegression()))
     if kind == "knn":
         k = params.get("k", 5)
         return (KNeighborsClassifier(n_neighbors=k, weights="distance", n_jobs=-1),
@@ -111,7 +112,7 @@ class HierarchicalModel:
     model solves a much easier, more local problem.
     """
 
-    def __init__(self, kind="xgb", features=None, **params):
+    def __init__(self, kind="rf", features=None, **params):
         self.kind, self.params = kind, params
         self.features = features or FingerprintFeatures()
 

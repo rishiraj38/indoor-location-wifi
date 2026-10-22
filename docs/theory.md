@@ -1,135 +1,110 @@
-# Theory Notes (for the report and the viva)
+# Theory Notes
 
-## 1. Problem formulation
+## 1. The problem
 
-A scan is a vector **x** ∈ ℝ⁵²⁰, one RSSI value per access point, with most entries "not heard".
-We learn three functions:
+A Wi-Fi scan is a list of 520 numbers, one per access point (AP): the received signal strength
+(RSSI) in dBm. From one scan we predict three things:
 
-| Target | Type | Loss / metric |
+| Target | Type of problem | Metric |
 |---|---|---|
-| building *b* ∈ {0,1,2} | multiclass classification | cross-entropy (Gini for trees) / accuracy |
-| floor *f* ∈ {0..4} | multiclass classification | cross-entropy / accuracy |
-| (x, y) in metres | 2-output regression | squared error / mean Euclidean error |
+| Building (0, 1, 2) | classification | accuracy |
+| Floor (0–4) | classification | accuracy |
+| Position (x, y) in metres | regression | mean distance error in metres |
 
-Combined metric (IPIN competition): `score = ‖p − p̂‖₂ + 50·[b ≠ b̂] + 4·[f ≠ f̂]`, i.e. a wrong
-building costs as much as 50 m of error and a wrong floor 4 m (roughly one storey of vertical
-distance).
+Combined score (from the IPIN indoor-positioning competition):
+`score = distance error + 50 m if building wrong + 4 m if floor wrong`.
 
-## 2. Missing data: why "+100" must not be used as a number
+## 2. The "+100" problem (missing values)
 
-RSSI is negative dBm; −30 is very strong, −100 is the edge of detection. The dataset writes
-+100 for "not heard". Fed directly to a model, +100 looks *stronger than any real signal*, the
-exact opposite of its meaning. The data is **missing not at random (MNAR)**: an AP is missing
-*because* it is far away. So the right imputation is a value just below the weakest real reading
-(we use min − 1 = −105 dBm), learned from training data only. We also add a binary "heard"
-indicator per AP so a model can use the presence pattern directly.
+RSSI is negative: −30 dBm is very strong, −100 dBm is barely heard. The dataset writes **+100**
+when an AP was **not heard at all**. Used as a number, +100 would look *stronger* than any real
+signal, the opposite of what it means. "Not heard" really means "too weak to detect", so we replace it
+with **−105 dBm**, just below the weakest real reading (−104). The value is computed from the
+training data only and then applied unchanged to the test data.
 
-## 3. Representations (Torres-Sospedra et al., 2015)
+## 3. Linear and Logistic Regression (baseline)
 
-Let `m` = weakest observed RSSI − 1 (here −105).
+* **Linear regression** predicts x (and separately y) as a weighted sum of all AP signals:
+  `x̂ = w₀ + w₁·RSSI₁ + … + w₄₆₅·RSSI₄₆₅`, with weights chosen to minimise the squared error.
+* **Logistic regression** predicts building and floor. For each class it computes a weighted sum,
+  then turns the sums into probabilities with softmax, and is trained with cross-entropy loss.
+* Inputs are standardised (mean 0, std 1, using training statistics) so all APs are on the same scale.
 
-* **raw**: `x` if heard, else `m`.
-* **positive**: `x − m` if heard, else 0. Range 0..105.
-* **powed**: `(positive / (max − m))^β`, β = e. Raising to a power > 1 compresses weak values
-  towards 0 and keeps strong ones distinct. Weak readings are the noisiest, so this down-weights noise.
+**Why linear regression does badly on position:** signal strength falls off with the *logarithm* of
+distance and is blocked by walls, so position is **not** a straight-line function of RSSI. A linear
+model can only draw one flat surface through 465 dimensions. Logistic regression does well on
+building and floor because each class can be separated by "which APs are strong", which a weighted
+sum captures well.
 
-**Why raw and positive give identical results for both models:**
-* Decision trees split on thresholds (`x_j ≤ t`). Any strictly increasing transform of a feature
-  preserves the order of values, so the same partitions exist and the tree is identical. Trees are
-  *invariant to monotone transforms*. Powed is monotone too, but the *imputed value* moves relative
-  to the real values, which can change splits slightly; that is why powed differs a little.
-* k-NN uses Euclidean distance, `‖a − b‖`. Positive = raw − m for every coordinate (including the
-  imputed ones), and subtracting the same constant from both vectors does not change their
-  difference. Powed is non-linear, so it **does** change k-NN distances.
+## 4. k-Nearest Neighbours (k-NN)
 
-## 4. k-Nearest Neighbours
+The classic fingerprinting method. No training: store every training scan. For a new scan:
+1. Compute the Euclidean distance to every stored scan.
+2. Take the k closest.
+3. Building and floor = their (distance-weighted) vote; position = their (distance-weighted) average.
 
-Predict from the k training scans closest in feature space. Building and floor are decided by a
-distance-weighted vote (weight 1/d); coordinates are the distance-weighted mean of the neighbours'
-coordinates.
-* Non-parametric: no training, but O(n·d) per query (here 19k × 465).
-* Small k → low bias, high variance (noisy); large k → averages across distant reference
-  points and blurs location. We choose k by user-grouped CV.
-* Asymptotically, 1-NN error ≤ 2 × Bayes error (Cover & Hart, 1967).
-* Weakness: all APs weigh equally in the distance, and it cannot learn which APs matter.
+* Small k gives noisy predictions; large k averages over far-away points and blurs the position. We choose k by
+  cross-validation.
+* Weakness: every AP counts equally in the distance, and prediction is slow because it compares
+  against all 19k scans.
 
-## 5. Decision trees and Random Forests
+## 5. Decision trees
 
-A CART tree greedily chooses the split (feature j, threshold t) that most reduces impurity:
-* classification: Gini `G = 1 − Σ_k p_k²`
-* regression: variance (MSE) of the targets in each child
+A tree asks yes/no questions such as "is WAP117 stronger than −80 dBm?". At each node it tries
+many (AP, threshold) pairs and keeps the one that makes the two child groups **purest**:
+* classification: **Gini impurity** `G = 1 − Σ pₖ²` (0 means all one class)
+* regression: **variance** of the targets (the split that most reduces it wins)
 
-A deep tree has low bias but high variance. **Random Forest** (Breiman, 2001) averages B trees,
-each trained on a bootstrap sample with a random subset of `max_features` features tried at each
-split. For B trees with variance σ² and pairwise correlation ρ, the variance of the average is
+A leaf predicts the majority class (classification) or the mean position of its training scans
+(regression). One deep tree memorises the training data, so it **overfits** (high variance).
 
-  `ρσ² + (1 − ρ)σ²/B`
+## 6. Random Forest
 
-Bagging drives the second term to 0; random feature selection lowers ρ. Bias is unchanged.
-Out-of-bag samples (≈ 36.8% = (1 − 1/n)ⁿ → 1/e) give a free validation estimate.
+Many trees (300 here), each made different in two ways:
+1. **Bootstrap sample:** each tree trains on a random sample of scans drawn *with replacement*.
+2. **Random features:** at each split, only a random subset of APs is considered (`max_features`,
+   for example √465 ≈ 21).
 
-Regression trees predict the **mean of the training targets in a leaf**, so an RF can only output
-convex combinations of training coordinates. It can never predict a point outside the surveyed
-area, which suits positioning.
+Prediction = majority vote (building, floor) or average (position). Averaging many different,
+overfit trees cancels out their individual mistakes: the **variance goes down while the bias stays low**.
+Formally, B trees with variance σ² and correlation ρ give an average with variance
+`ρσ² + (1−ρ)σ²/B`. More trees shrink the second term, and random features lower ρ.
 
-## 6. Gradient boosting and XGBoost
+Useful properties here:
+* Trees only compare values against thresholds, so shifting or rescaling the inputs changes nothing.
+  This is why "raw" and "positive" features give identical results.
+* The position prediction is an average of real training positions, so it always lands inside the
+  surveyed area.
+* **Feature importance**: how much each AP reduced impurity across all trees.
 
-Boosting builds an additive model `F_M(x) = Σ_m η·h_m(x)`, where each new tree `h_m` fits the negative
-gradient of the loss at the current prediction (Friedman, 2001), with learning rate η.
+## 7. Plain vs per-building Random Forest
 
-XGBoost (Chen & Guestrin, 2016) minimises the regularised objective
+* **Plain:** three separate forests trained on all scans (building, floor, position).
+* **Per-building (hierarchical):** predict the building first (≈ 99.8% correct), then use a floor
+  forest and a position forest trained only on that building's scans. Each sub-problem is smaller
+  and the irrelevant APs of other buildings drop out. The risk is that a wrong building sends the scan to the
+  wrong sub-model, which we measure with the error breakdown.
 
-  `L = Σ_i l(y_i, ŷ_i) + Σ_m [γ·T_m + ½·λ·‖w_m‖²]`
+Neither version lets the three tasks share what they learn. Phase 2 does that with one neural
+network that has a shared trunk and three output heads (multitask learning, Caruana 1997).
 
-using a **second-order Taylor expansion**. With gradient `g_i` and Hessian `h_i`, the optimal leaf
-weight is `w* = −Σg / (Σh + λ)` and a split's gain is
+## 8. How we validate
 
-  `½ [ G_L²/(H_L+λ) + G_R²/(H_R+λ) − (G_L+G_R)²/(H_L+H_R+λ) ] − γ`
+* Scans are taken in bursts (same person, same spot, seconds apart). A random train/validation split
+  would put near-identical scans on both sides and overstate accuracy.
+* **GroupKFold by USERID (5 folds):** each fold holds out whole users. All choices (features, k,
+  max_features) are made this way, on training data only.
+* **Test set** = the official validation file: collected 4 months later by different users, much of
+  it on phones not seen in training. It is used **once**, at the end.
 
-**Sparsity-aware splits:** at every split XGBoost learns a *default direction* for missing values.
-Our imputed −105 plays the same role explicitly.
+## 9. Why the CV and test numbers differ
 
-Bias–variance: boosting mainly reduces **bias** (sequential correction); RF mainly reduces **variance**.
+CV errors are higher than test errors. We checked two explanations:
+* **Location coverage — not the cause.** Held-out scans are about as close to a training reference
+  point in CV (9.9% more than 5 m away) as on the test set (7.7%).
+* **New phones — the likely cause.** In training, 17 of 18 users had their own phone, so a held-out
+  user almost always means an unseen phone. On the test set, 35.7% of scans come from phones that are in
+  training. Different phones read the same signal differently.
 
-## 7. Independent vs hierarchical modelling
-
-*Independent:* three models on all data. The coordinate regressor must learn one global mapping
-across three buildings that share almost no APs.
-
-*Hierarchical:* predict building (≈ 99.8% accurate), then use a floor classifier and coordinate
-regressor trained only on that building. Each sub-problem is smaller and more homogeneous, and
-irrelevant APs drop out naturally. The cost: a building error propagates (cascade error), which the
-hierarchical breakdown measures.
-
-This is a hand-designed way of sharing information between tasks. Phase 2's multitask MLP
-(Caruana, 1997) learns a shared representation instead: one trunk, three heads, with loss
-`L = λ_b·CE_b + λ_f·CE_f + λ_xy·MSE_xy`.
-
-## 8. Validation design (and why it matters)
-
-* Scans come in bursts (same user, same spot, seconds apart). A random split puts near-duplicate
-  scans in both train and validation, so it measures memorisation.
-* **GroupKFold by USERID**: no user appears in both the training and validation folds. This simulates new people
-  and new walks.
-* **Official validation file as test**: collected 4 months later (Sept–Oct vs May–June 2013) by
-  different users, partly with phones not in training. Used **once**, at the end. All model and feature choices
-  are made by CV. Using test scores to choose models would be test-set leakage.
-* Normalisation and imputation statistics are fitted on training data only (`fit` on train,
-  `transform` on test) inside each CV fold.
-
-## 9. Why CV and test can disagree (an observed result)
-
-CV errors are higher than test errors, and the model ranking can differ. We checked two explanations:
-
-* **Location coverage — not the cause.** The distance from a held-out scan to the nearest training
-  reference point is about the same in CV (9.9% of scans > 5 m away) and on the test set (7.7%):
-  several users surveyed the same reference points.
-* **Device novelty — the likely cause.** In the training data every user carried their own phone
-  (17 of 18 users have a unique phone). So holding out a user almost always means holding out a
-  *device*: close to 100% of CV validation scans come from a phone the model never saw. On the
-  test set, 35.7% of scans come from phones that are in training. Different phones report
-  systematically different RSSI for the same place, which hurts raw-distance methods like k-NN most.
-
-So user-grouped CV is a *stricter* test (new user + new device + 20% less radio map). It is still
-the honest basis for choosing models, since the test set cannot be used for that, and we report
-both numbers side by side.
+So CV is a stricter test. It is still the honest way to choose models, because choosing by test score
+would be cheating.
