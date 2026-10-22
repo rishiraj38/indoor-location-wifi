@@ -1,9 +1,9 @@
-"""Phase 1 experiments: feature comparison, cross-validated tuning, final test
-evaluation, and every figure/table used in the report.
+"""Phase 1 experiments: feature comparison, tuning, final test results and
+the figures/tables for the report.
 
-How models are chosen: only the training set is used, with 5-fold GroupKFold
-by USERID (the users in a validation fold never appear in its training fold).
-The official validation file is used once, at the end, as the test set.
+Model choices use only the training set with 5-fold GroupKFold by USERID, so
+the same user is never in both the training and validation fold. The official
+validation file is only used once at the end as the test set.
 """
 
 import json
@@ -40,7 +40,7 @@ def log(*a):
 
 
 def cv_eval(make_model):
-    """Average of each metric over the user-grouped folds."""
+    """Mean of each metric over the CV folds."""
     rows = []
     for tr_idx, va_idx in folds:
         m = make_model().fit(Xtr[tr_idx], ytr.iloc[tr_idx].reset_index(drop=True))
@@ -60,7 +60,7 @@ def test_eval(make_model):
 
 F = FingerprintFeatures
 
-# =========================================================== 1. which features?
+# 1. which features?
 log("== feature comparison (CV picks, test shown for reference)")
 feature_configs = {
     "raw dBm, not-heard = -105": dict(representation="raw", add_indicators=False, add_summary=False),
@@ -96,7 +96,7 @@ rf_feats, knn_feats = cv_pick("Random Forest (per-building)"), cv_pick("k-NN (k=
 lin_feats = feature_configs["raw dBm, not-heard = -105"]
 log("  chosen: RF", rf_feats, "| k-NN", knn_feats)
 
-# =========================================================== 2. tuning
+# 2. tuning
 log("== tuning (user-grouped CV)")
 tuning = []
 for k in [1, 3, 5, 7, 11]:
@@ -127,7 +127,7 @@ for n in [1, 5, 10, 25, 50, 100, 200, 300]:
 trees = pd.DataFrame(trees)
 trees.to_csv(RES / "rf_number_of_trees.csv", index=False)
 
-# =========================================================== 3. final comparison on the test set
+# 3. final comparison on the test set
 log("== final test evaluation")
 MODELS = {
     "Centroid (guess the average)": lambda: CentroidBaseline(),
@@ -148,9 +148,9 @@ for name, make in MODELS.items():
 final = pd.DataFrame(final)
 final.to_csv(RES / "test_metrics.csv", index=False)
 
-MAIN = "Random Forest (per-building)"  # the model the brief asks for; analysed in depth below
+MAIN = "Random Forest (per-building)"  # the model the brief asks for, looked at in more detail below
 
-# =========================================================== 4. does removing phone-19 outliers help?
+# 4. does removing phone-19 outliers help?
 log("== outlier check")
 strong = ((Xtr != NOT_DETECTED) & (Xtr > -30)).any(axis=1)
 rows = []
@@ -161,7 +161,7 @@ for label, mask in [("all training scans", np.ones(len(Xtr), bool)), ("without s
 pd.DataFrame(rows).to_csv(RES / "ablation_outliers.csv", index=False)
 log(pd.DataFrame(rows)[["training_set", "n_train", "building_floor_acc", "mean_error_m"]].to_string())
 
-# =========================================================== 5. breakdowns
+# 5. breakdowns
 SLUG = {"k-NN": "knn", MAIN: "rf"}
 for name, slug in SLUG.items():
     hierarchical_breakdown(yte, preds[name]).to_csv(RES / f"breakdown_hierarchical_{slug}.csv", index=False)
@@ -169,7 +169,7 @@ for name, slug in SLUG.items():
     bf = (yte["BUILDINGID"].astype(str) + "-" + yte["FLOOR"].astype(str)).rename("building_floor")
     per_group_error(yte, preds[name], bf).to_csv(RES / f"breakdown_building_floor_{slug}.csv", index=False)
 
-# =========================================================== 6. figures
+# 6. figures
 # 6a. model comparison (centroid left out: its 140 m would squash the other bars)
 f = final[final.model != "Centroid (guess the average)"]
 labels = [SHORT[m] for m in f.model]
