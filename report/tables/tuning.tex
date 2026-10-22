@@ -1,0 +1,20 @@
+\begin{table}[t]
+\centering
+\caption{Hyper-parameter search with user-grouped 5-fold CV on the training set.}
+\label{tab:tuning}
+\resizebox{\columnwidth}{!}{%
+\begin{tabular}{llccc}
+\toprule
+Model & Parameters & B+F \% & Mean err. (m) & IPIN \\
+\midrule
+k-NN & k=1 & 72.38 & 12.92 & 15.55 \\
+k-NN & k=3 & 72.30 & 12.10 & 14.71 \\
+k-NN & k=5 & 72.29 & 11.78 & 14.46 \\
+k-NN & k=7 & 72.26 & 11.80 & 14.73 \\
+k-NN & k=11 & 72.06 & 11.93 & 15.05 \\
+Random Forest & max\_features=sqrt, n\_estimators=300 & 70.90 & 13.55 & 15.21 \\
+Random Forest & max\_features=0.1, n\_estimators=300 & 71.56 & 14.38 & 16.08 \\
+Random Forest & max\_features=0.3, n\_estimators=300 & 70.93 & 15.57 & 17.45 \\
+\bottomrule
+\end{tabular}}
+\end{table}
