@@ -1,0 +1,101 @@
+{
+  "cleaning": {
+    "rows_in": 19937,
+    "duplicates_dropped": 637,
+    "empty_scans_dropped": 73,
+    "rows_out": 19227
+  },
+  "n_folds": 5,
+  "best_params": {
+    "k-NN": {
+      "k": 5
+    },
+    "Random Forest": {
+      "max_features": "sqrt",
+      "n_estimators": 300
+    }
+  },
+  "rf_features": {
+    "representation": "raw",
+    "add_indicators": false,
+    "add_summary": false
+  },
+  "knn_features": {
+    "representation": "raw",
+    "add_indicators": false,
+    "add_summary": false
+  },
+  "main_model": "Random Forest (per-building)",
+  "test_metrics": {
+    "Centroid (guess the average)": {
+      "building_acc": 0.2412,
+      "floor_acc": 0.1548,
+      "building_floor_acc": 0.036,
+      "mae_longitude_m": 122.4151,
+      "mae_latitude_m": 66.1989,
+      "mean_error_m": 142.7544,
+      "median_error_m": 167.3738,
+      "p75_error_m": 193.3732,
+      "p95_error_m": 224.6104,
+      "ipin_score_m": 184.074,
+      "fit_seconds": 0.0006,
+      "predict_ms_per_scan": 0.0
+    },
+    "Linear + Logistic Regression": {
+      "building_acc": 1.0,
+      "floor_acc": 0.8866,
+      "building_floor_acc": 0.8866,
+      "mae_longitude_m": 43.6954,
+      "mae_latitude_m": 24.6705,
+      "mean_error_m": 51.9949,
+      "median_error_m": 37.5282,
+      "p75_error_m": 72.2524,
+      "p95_error_m": 141.8844,
+      "ipin_score_m": 52.4486,
+      "fit_seconds": 0.6659,
+      "predict_ms_per_scan": 0.0027
+    },
+    "k-NN": {
+      "building_acc": 0.9973,
+      "floor_acc": 0.901,
+      "building_floor_acc": 0.901,
+      "mae_longitude_m": 5.8048,
+      "mae_latitude_m": 5.353,
+      "mean_error_m": 8.6905,
+      "median_error_m": 5.3546,
+      "p75_error_m": 10.3135,
+      "p95_error_m": 26.9922,
+      "ipin_score_m": 9.2216,
+      "fit_seconds": 0.0595,
+      "predict_ms_per_scan": 0.304
+    },
+    "Random Forest": {
+      "building_acc": 0.9982,
+      "floor_acc": 0.9091,
+      "building_floor_acc": 0.9082,
+      "mae_longitude_m": 6.8205,
+      "mae_latitude_m": 6.1962,
+      "mean_error_m": 10.2221,
+      "median_error_m": 7.6294,
+      "p75_error_m": 13.348,
+      "p95_error_m": 27.4187,
+      "ipin_score_m": 10.6758,
+      "fit_seconds": 4.1019,
+      "predict_ms_per_scan": 0.0901
+    },
+    "Random Forest (per-building)": {
+      "building_acc": 0.9982,
+      "floor_acc": 0.9127,
+      "building_floor_acc": 0.9118,
+      "mae_longitude_m": 6.1927,
+      "mae_latitude_m": 5.7686,
+      "mean_error_m": 9.3659,
+      "median_error_m": 7.0726,
+      "p75_error_m": 12.1882,
+      "p95_error_m": 23.3115,
+      "ipin_score_m": 9.8052,
+      "fit_seconds": 3.502,
+      "predict_ms_per_scan": 0.2356
+    }
+  }
+}

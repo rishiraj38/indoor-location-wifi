@@ -1,0 +1,40 @@
+== feature comparison (CV picks, test shown for reference)
+  Random Forest (per-building) raw dBm, not-heard = -105              cv ipin 15.23 | test ipin 9.70
+  Random Forest (per-building) positive (shifted so not-heard = 0)    cv ipin 15.23 | test ipin 9.70
+  Random Forest (per-building) powed (compress weak signals)          cv ipin 15.71 | test ipin 9.88
+  Random Forest (per-building) raw + heard/not-heard flags            cv ipin 15.55 | test ipin 10.28
+  Random Forest (per-building) raw + flags + scan summary             cv ipin 15.82 | test ipin 9.86
+  k-NN (k=5)                   raw dBm, not-heard = -105              cv ipin 14.46 | test ipin 9.22
+  k-NN (k=5)                   positive (shifted so not-heard = 0)    cv ipin 14.46 | test ipin 9.22
+  k-NN (k=5)                   powed (compress weak signals)          cv ipin 17.60 | test ipin 8.58
+  k-NN (k=5)                   raw + heard/not-heard flags            cv ipin 14.54 | test ipin 9.20
+  chosen: RF {'representation': 'raw', 'add_indicators': False, 'add_summary': False} | k-NN {'representation': 'raw', 'add_indicators': False, 'add_summary': False}
+== tuning (user-grouped CV)
+  k-NN k=1: cv ipin 15.55
+  k-NN k=3: cv ipin 14.71
+  k-NN k=5: cv ipin 14.46
+  k-NN k=7: cv ipin 14.73
+  k-NN k=11: cv ipin 15.05
+  RF {'max_features': 'sqrt', 'n_estimators': 300}: cv ipin 15.21
+  RF {'max_features': 0.1, 'n_estimators': 300}: cv ipin 16.08
+  RF {'max_features': 0.3, 'n_estimators': 300}: cv ipin 17.45
+  best: {'k-NN': {'k': 5}, 'Random Forest': {'max_features': 'sqrt', 'n_estimators': 300}}
+  trees=1: floor acc 0.692, mean err 16.74
+  trees=5: floor acc 0.796, mean err 10.97
+  trees=10: floor acc 0.861, mean err 9.82
+  trees=25: floor acc 0.893, mean err 9.11
+  trees=50: floor acc 0.900, mean err 8.55
+  trees=100: floor acc 0.909, mean err 8.31
+  trees=200: floor acc 0.909, mean err 8.31
+  trees=300: floor acc 0.909, mean err 8.25
+== final test evaluation
+  Centroid (guess the average)   building 0.2412 floor 0.1548 mean err 142.75 m  ipin 184.07
+  Linear + Logistic Regression   building 1.0000 floor 0.8866 mean err 51.99 m  ipin 52.45
+  k-NN                           building 0.9973 floor 0.9010 mean err 8.69 m  ipin 9.22
+  Random Forest                  building 0.9982 floor 0.9091 mean err 10.22 m  ipin 10.68
+  Random Forest (per-building)   building 0.9982 floor 0.9127 mean err 9.37 m  ipin 9.81
+== outlier check
+                          training_set  n_train  building_floor_acc  mean_error_m
+0                   all training scans    19227            0.911791      9.365922
+1  without scans having RSSI > -30 dBm    18735            0.910891      9.455210
+done
