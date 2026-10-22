@@ -63,7 +63,7 @@ A leaf predicts the majority class (classification) or the mean position of its 
 Many trees (300 here), each made different in two ways:
 1. **Bootstrap sample:** each tree trains on a random sample of scans drawn *with replacement*.
 2. **Random features:** at each split, only a random subset of APs is considered (`max_features`,
-   for example √465 ≈ 21).
+   for example √465, about 21).
 
 Prediction = majority vote (building, floor) or average (position). Averaging many different,
 overfit trees cancels out their individual mistakes: the **variance goes down while the bias stays low**.
@@ -80,7 +80,7 @@ Useful properties here:
 ## 7. Plain vs per-building Random Forest
 
 * **Plain:** three separate forests trained on all scans (building, floor, position).
-* **Per-building (hierarchical):** predict the building first (≈ 99.8% correct), then use a floor
+* **Per-building (hierarchical):** predict the building first (about 99.8% correct), then use a floor
   forest and a position forest trained only on that building's scans. Each sub-problem is smaller
   and the irrelevant APs of other buildings drop out. The risk is that a wrong building sends the scan to the
   wrong sub-model, which we measure with the error breakdown.
@@ -100,9 +100,9 @@ network that has a shared trunk and three output heads (multitask learning, Caru
 ## 9. Why the CV and test numbers differ
 
 CV errors are higher than test errors. We checked two explanations:
-* **Location coverage — not the cause.** Held-out scans are about as close to a training reference
+* **Location coverage is not the cause.** Held-out scans are about as close to a training reference
   point in CV (9.9% more than 5 m away) as on the test set (7.7%).
-* **New phones — the likely cause.** In training, 17 of 18 users had their own phone, so a held-out
+* **New phones are the likely cause.** In training, 17 of 18 users had their own phone, so a held-out
   user almost always means an unseen phone. On the test set, 35.7% of scans come from phones that are in
   training. Different phones read the same signal differently.
 
