@@ -8,6 +8,16 @@ Wi-Fi signal strengths it measures. Dataset: [UJIIndoorLoc](https://archive.ics.
 
 ![Campus map](results/figures/eda_campus_map.png)
 
+## Team
+
+| Name | Roll no. | Contribution |
+|---|---|---|
+| Rishi Raj | 2401010380 | Literature review, problem framing, metrics |
+| Aditya Samadhiya | 2401010037 | Data cleaning and exploratory analysis |
+| Yash Yadav | 2401010515 | Feature engineering and feature comparison |
+| Kaustubh Ranjan Mishra | 2401020116 | Linear/Logistic, k-NN, cross-validation design |
+| [Fifth member] | | Random Forest, error analysis, repository and report |
+
 ## Results (official test set, 1,111 scans)
 
 | Model | Building acc. | Floor acc. | Mean error | Median error | IPIN score |
