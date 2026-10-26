@@ -100,8 +100,3 @@ Breiman, *Random Forests* (2001); Caruana, *Multitask Learning* (1997).
 
 We thank the UJIIndoorLoc authors for making their dataset publicly available on the UCI Machine Learning Repository.
 This project was completed as part of the Advanced Machine Learning course (Section D, 2024–25).
-
-## License
-
-This project (code and report) is released under the [MIT License](https://opensource.org/licenses/MIT).
-The dataset is subject to its original terms of use (see [UCI repository](https://archive.ics.uci.edu/dataset/310/ujiindoorloc)).
