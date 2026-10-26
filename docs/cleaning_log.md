@@ -27,6 +27,13 @@ them), so all of them stay in.
 Both values (-105 and the list of kept APs) are learned from the training data only and then applied unchanged to
 the test data. This way no information from the test set leaks into training.
 
+## Summary
+
+| Split | Raw rows | Cleaned rows | Kept (%) | AP columns |
+|---|---|---|---|---|
+| Train | 19,937 | 19,227 | 96.4% | 465 |
+| Test | 1,111 | 1,111 | 100.0% | 465 |
+
 ## Checks
 
 - The model-ready files contain no +100 values. All AP values are between -105 and 0.
