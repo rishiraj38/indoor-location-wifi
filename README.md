@@ -82,8 +82,14 @@ All randomness is seeded (`random_state=42`).
 
 ## Phase 2 (next)
 
-In Phase 2 we will build a multitask neural network. It has one shared trunk and three heads (building, floor, position).
-We will compare it with these baselines using the same split and metrics.
+In Phase 2 we will build a multitask neural network with one shared trunk and three output heads (building classification, floor classification, and position regression).
+
+Planned work:
+- Shared dense layers (trunk) followed by task-specific heads.
+- Weighted loss combining cross-entropy (building, floor) and MSE (position).
+- Compare against the Phase 1 baselines using the **same** GroupKFold split and IPIN score.
+- Explore dropout and batch normalisation for regularisation.
+- Optionally fine-tune with buildings as separate subnetworks (mirroring the per-building RF strategy).
 
 ## References
 
