@@ -42,3 +42,11 @@ In the model-ready files the `WAP` columns run from -105 to 0. -105 means not de
 
 `SPACEID`, `RELATIVEPOSITION`, `USERID`, `PHONEID` and `TIMESTAMP` are not used as model inputs. `USERID` is used to split
 cross-validation folds, and `PHONEID` is used for the error-by-phone analysis.
+
+## Notes
+
+- **RSSI units**: All `WAP*` values are in dBm (decibels relative to one milliwatt). Higher (less negative) means a stronger signal.  
+  The sentinel value +100 (raw) / -105 (model-ready) indicates "access point not detected".
+- **TIMESTAMP**: Stored as Unix epoch seconds (seconds since 1970-01-01 00:00:00 UTC). The training and test scans are approximately 4 months apart, which explains the shift in phone distribution.
+- **Coordinate system**: `LONGITUDE` and `LATITUDE` are UTM (Universal Transverse Mercator) coordinates in metres, **not** geographic degrees. Euclidean distance in these coordinates approximates real-world distance.
+
