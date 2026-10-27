@@ -1,4 +1,10 @@
-"""EDA: saves figures to results/figures and numbers to results/eda_summary.json."""
+"""EDA: saves figures to results/figures and numbers to results/eda_summary.json.
+
+Exploratory analysis authored by: Yash Raj (2401010514)
+  - Campus map, class-balance, RSSI distribution, AP-locality, floor-layout,
+    user/phone breakdown, suspicious-readings, PCA, and sparsity-heatmap figures.
+  - Summary statistics written to results/eda_summary.json.
+"""
 
 import json
 import sys

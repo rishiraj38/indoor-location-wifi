@@ -1,5 +1,7 @@
 # Cleaning and Preprocessing Log
 
+*Prepared by: Yash Raj (2401010514) — data cleaning and exploratory analysis.*
+
 Produced by `scripts/make_processed_data.py`. The numbers are also saved in `data/processed/processing_info.json`.
 
 ## Step 1: training set cleaning (`train_cleaned.csv`)

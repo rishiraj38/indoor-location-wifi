@@ -3,6 +3,10 @@
 train_cleaned.csv       training scans with duplicates and empty scans removed (values unchanged)
 train_model_ready.csv   cleaned training scans, +100 replaced with -105, never-heard APs dropped
 test_model_ready.csv    the official validation file with the same transformation (fitted on train)
+
+Data cleaning pipeline authored by: Yash Raj (2401010514)
+  - Fit-on-train-only strategy to prevent leakage of test statistics.
+  - Sentinel replacement (-105 dBm) and AP-column pruning persisted in processing_info.json.
 """
 
 import json
