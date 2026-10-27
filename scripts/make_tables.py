@@ -32,15 +32,16 @@ for _, r in t.iterrows():
     if r.building_floor_acc == best_bf:
         bf = rf"\textbf{{{bf}}}"
     rows.append(f"{r.model} & {fmt_pct(r.building_acc)} & {fmt_pct(r.floor_acc)} & {bf} & "
+                f"{r.mae_longitude_m:.2f} & {r.mae_latitude_m:.2f} & "
                 f"{err} & {r.median_error_m:.2f} & {r.p75_error_m:.2f} & {r.ipin_score_m:.2f} \\\\")
 write("main_results", r"""\begin{table*}[t]
 \centering
-\caption{Test-set results (official UJIIndoorLoc validation file, 1{,}111 scans). Accuracies in \%, errors in metres.
+\caption{Test-set results (official UJIIndoorLoc validation file, 1{,}111 scans). Accuracies in \%, errors in metres. MAE lon./lat. $=$ mean absolute error of each coordinate.
 IPIN score $=$ 2-D error $+\,50\times$ building miss $+\,4\times$ floor miss.}
 \label{tab:main}
-\begin{tabular}{lccccccc}
+\begin{tabular}{lccccccccc}
 \toprule
-Model & Building & Floor & Bldg+Floor & Mean err. & Median & P75 & IPIN score \\
+Model & Building & Floor & Bldg+Floor & MAE lon. & MAE lat. & Mean err. & Median & P75 & IPIN score \\
 \midrule
 """ + "\n".join(rows) + r"""
 \bottomrule
