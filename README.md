@@ -99,3 +99,21 @@ Breiman, *Random Forests* (2001); Caruana, *Multitask Learning* (1997).
 
 We thank the UJIIndoorLoc authors for making their dataset publicly available on the UCI Machine Learning Repository.
 This project was completed as part of the Advanced Machine Learning course (Section D, 2024–25).
+
+## FAQ
+
+**Q: The notebook fails with `ModuleNotFoundError: indoorloc`.**  
+A: Make sure you have activated the virtual environment (`source .venv/bin/activate`) and installed the requirements (`pip install -r requirements.txt`).  
+If the error persists, add the `src/` directory to your Python path: `export PYTHONPATH=src` (or `set PYTHONPATH=src` on Windows).
+
+**Q: `run_experiments.py` takes very long — can I speed it up?**  
+A: The script runs 5-fold cross-validation for all model configurations.  You can reduce `N_JOBS` or comment out individual model blocks while exploring.
+
+**Q: The figures are missing from the notebook output.**  
+A: Run `python scripts/run_eda.py` and `python scripts/run_experiments.py` first to generate the figures in `results/figures/`.
+
+**Q: How do I build the PDF report?**  
+A: Install [Tectonic](https://tectonic-typesetting.github.io) and run `cd report && tectonic main.tex`.  Alternatively, upload the `report/` folder to [Overleaf](https://www.overleaf.com).
+
+For more details see [`docs/setup_notes.md`](docs/setup_notes.md) and [`CONTRIBUTING.md`](CONTRIBUTING.md).
+
