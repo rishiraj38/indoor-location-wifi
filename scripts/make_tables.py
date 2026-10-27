@@ -21,7 +21,7 @@ def fmt_pct(v):
 
 # Main results
 t = pd.read_csv(RES / "test_metrics.csv")
-best_err = t.loc[t.model != "Centroid (guess the average)", "mean_error_m"].min()
+best_err = t.mean_error_m.min()
 best_bf = t.building_floor_acc.max()
 rows = []
 for _, r in t.iterrows():

@@ -22,7 +22,7 @@ from sklearn.model_selection import GroupKFold
 from indoorloc.data import NOT_DETECTED, ROOT, load_splits, split_xy
 from indoorloc.features import FingerprintFeatures
 from indoorloc.metrics import hierarchical_breakdown, per_group_error, positioning_errors, summarize
-from indoorloc.models import CentroidBaseline, HierarchicalModel, IndependentModel
+from indoorloc.models import HierarchicalModel, IndependentModel
 from indoorloc.plotting import INK_2, SEQ, SERIES, save, setup
 
 RES = ROOT / "results"
@@ -130,13 +130,12 @@ trees.to_csv(RES / "rf_number_of_trees.csv", index=False)
 # 3. final comparison on the test set
 log("== final test evaluation")
 MODELS = {
-    "Centroid (guess the average)": lambda: CentroidBaseline(),
     "Linear + Logistic Regression": lambda: IndependentModel("linear", features=F(**lin_feats)),
     "k-NN": lambda: IndependentModel("knn", features=F(**knn_feats), **best["k-NN"]),
     "Random Forest": lambda: IndependentModel("rf", features=F(**rf_feats), **best["Random Forest"]),
     "Random Forest (per-building)": lambda: HierarchicalModel("rf", features=F(**rf_feats), **best["Random Forest"]),
 }
-SHORT = {"Centroid (guess the average)": "Centroid", "Linear + Logistic Regression": "Linear/Logistic",
+SHORT = {"Linear + Logistic Regression": "Linear/Logistic",
          "k-NN": "k-NN", "Random Forest": "RF", "Random Forest (per-building)": "RF per-building"}
 final, preds, models = [], {}, {}
 for name, make in MODELS.items():
@@ -170,8 +169,8 @@ for name, slug in SLUG.items():
     per_group_error(yte, preds[name], bf).to_csv(RES / f"breakdown_building_floor_{slug}.csv", index=False)
 
 # 6. figures
-# 6a. model comparison (centroid left out: its 140 m would squash the other bars)
-f = final[final.model != "Centroid (guess the average)"]
+# 6a. model comparison
+f = final
 labels = [SHORT[m] for m in f.model]
 fig, axes = plt.subplots(1, 2, figsize=(11, 3.4))
 axes[0].barh(labels, f.building_floor_acc * 100, color=SERIES[0], height=0.6)
@@ -191,7 +190,7 @@ save(fig, "model_comparison")
 
 # 6b. error CDF
 fig, ax = plt.subplots(figsize=(7, 4))
-for i, name in enumerate([n for n in MODELS if n != "Centroid (guess the average)"]):
+for i, name in enumerate(MODELS):
     e = np.sort(positioning_errors(yte, preds[name]))
     ax.plot(e, np.arange(1, len(e) + 1) / len(e) * 100, color=SERIES[i], label=SHORT[name])
 ax.set_xlim(0, 60)

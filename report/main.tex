@@ -196,8 +196,6 @@ mean and standard deviation of RSSI, and the IDs of the three strongest APs). Th
 cross-validation.
 
 \subsection{Models}
-\textbf{Centroid baseline.} Predicts the most common building and floor and the mean position. Any useful model should do better than this.
-
 \textbf{Linear and logistic regression.} Inputs are standardised with training statistics. Logistic
 regression (softmax, cross-entropy, L2, $C=1$) predicts building and floor. Ordinary least-squares linear
 regression predicts $x$ and $y$.
@@ -271,7 +269,7 @@ error~\cite{torres2014uji}.
 \begin{figure}[t]
 \centering
 \includegraphics[width=\columnwidth]{model_comparison}
-\caption{Floor accuracy and mean position error on the test set (centroid baseline omitted: 3.6\%, 142.8\,m).}
+\caption{Floor accuracy and mean position error on the test set.}
 \label{fig:comparison}
 \end{figure}
 

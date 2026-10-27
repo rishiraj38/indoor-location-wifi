@@ -22,7 +22,6 @@ Wi-Fi signal strengths it measures. Dataset: [UJIIndoorLoc](https://archive.ics.
 
 | Model | Building acc. | Floor acc. | Mean error | Median error | IPIN score |
 |---|---|---|---|---|---|
-| Centroid (guess the average) | 24.1% | 15.5% | 142.75 m | 167.37 m | 184.07 |
 | Linear + Logistic Regression | **100.0%** | 88.7% | 51.99 m | 37.53 m | 52.45 |
 | k-NN (k = 5) | 99.7% | 90.1% | **8.69 m** | **5.36 m** | **9.22** |
 | Random Forest | 99.8% | 90.9% | 10.22 m | 7.63 m | 10.68 |
@@ -48,7 +47,7 @@ Wi-Fi signal strengths it measures. Dataset: [UJIIndoorLoc](https://archive.ics.
 2. EDA: 96.5% of readings are "not heard", a scan hears about 18 of 520 access points, most access points belong to one building, the test set comes from 4 months later with mostly new phones, and phone 19 gives faulty readings. See `results/figures/eda_*.png`.
 3. Missing values: the dataset stores "not heard" as +100. A model would read that as the strongest possible signal. We replace it with -105 dBm, just below the weakest real reading. The value is learned from training data only.
 4. Feature comparison: we tried raw dBm vs shifted vs "powed" vs heard/not-heard flags vs per-scan summary features. Cross-validation picked the simplest version (raw).
-5. Models: centroid baseline, Linear + Logistic Regression, k-NN, Random Forest (plain and per-building).
+5. Models: Linear + Logistic Regression, k-NN, Random Forest (plain and per-building).
 6. Validation: we used 5-fold GroupKFold by user on the training set for every choice (features, k, max_features). The official validation file is used only once, as the test set.
 7. Error analysis: error split by building/floor correctness, floor confusion matrices, error maps, error per phone, error vs number of access points heard, feature importance, outlier check.
 

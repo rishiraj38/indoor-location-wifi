@@ -139,18 +139,3 @@ class HierarchicalModel:
                 floor[m] = fclf.predict(Z[m])
                 xy[m] = creg.predict(Z[m])
         return {"BUILDINGID": b, "FLOOR": floor, "LONGITUDE": xy[:, 0], "LATITUDE": xy[:, 1]}
-
-
-class CentroidBaseline:
-    """Dumb baseline: most common building/floor and the mean coordinates."""
-
-    def fit(self, X, y):
-        self.b_ = y["BUILDINGID"].mode()[0]
-        self.f_ = y["FLOOR"].mode()[0]
-        self.xy_ = y[COORDS].mean().to_numpy()
-        return self
-
-    def predict(self, X):
-        n = len(X)
-        return {"BUILDINGID": np.full(n, self.b_), "FLOOR": np.full(n, self.f_),
-                "LONGITUDE": np.full(n, self.xy_[0]), "LATITUDE": np.full(n, self.xy_[1])}
