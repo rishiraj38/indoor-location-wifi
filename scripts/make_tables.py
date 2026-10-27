@@ -33,15 +33,14 @@ for _, r in t.iterrows():
         bf = rf"\textbf{{{bf}}}"
     rows.append(f"{r.model} & {fmt_pct(r.building_acc)} & {fmt_pct(r.floor_acc)} & {bf} & "
                 f"{r.mae_longitude_m:.2f} & {r.mae_latitude_m:.2f} & "
-                f"{err} & {r.median_error_m:.2f} & {r.p75_error_m:.2f} & {r.ipin_score_m:.2f} \\\\")
+                f"{err} & {r.median_error_m:.2f} & {r.p75_error_m:.2f} \\\\")
 write("main_results", r"""\begin{table*}[t]
 \centering
-\caption{Test-set results (official UJIIndoorLoc validation file, 1{,}111 scans). Accuracies in \%, errors in metres. MAE lon./lat. $=$ mean absolute error of each coordinate.
-IPIN score $=$ 2-D error $+\,50\times$ building miss $+\,4\times$ floor miss.}
+\caption{Test-set results (official UJIIndoorLoc validation file, 1{,}111 scans). Accuracies in \%, errors in metres. MAE lon./lat. $=$ mean absolute error of each coordinate.}
 \label{tab:main}
-\begin{tabular}{lccccccccc}
+\begin{tabular}{lcccccccc}
 \toprule
-Model & Building & Floor & Bldg+Floor & MAE lon. & MAE lat. & Mean err. & Median & P75 & IPIN score \\
+Model & Building & Floor & Bldg+Floor & MAE lon. & MAE lat. & Mean err. & Median & P75 \\
 \midrule
 """ + "\n".join(rows) + r"""
 \bottomrule
@@ -53,18 +52,18 @@ Model & Building & Floor & Bldg+Floor & MAE lon. & MAE lat. & Mean err. & Median
 a = pd.read_csv(RES / "ablation_features.csv")
 blocks = []
 for model, sub in a.groupby("model", sort=False):
-    blocks.append(rf"\multicolumn{{5}}{{l}}{{\emph{{{model}}}}} \\")
-    blocks += [f"{r.features} & {r.cv_ipin_score_m:.2f} & {r.test_ipin_score_m:.2f} & "
-               f"{fmt_pct(r.test_building_floor_acc)} & {r.test_mean_error_m:.2f} \\\\" for _, r in sub.iterrows()]
+    blocks.append(rf"\multicolumn{{4}}{{l}}{{\emph{{{model}}}}} \\")
+    blocks += [f"{r.features} & {r.cv_mean_error_m:.2f} & {r.test_mean_error_m:.2f} & "
+               f"{fmt_pct(r.test_building_floor_acc)} \\\\" for _, r in sub.iterrows()]
     blocks.append(r"\midrule")
 write("ablation", r"""\begin{table}[t]
 \centering
 \caption{Feature comparison. CV $=$ 5-fold GroupKFold by user on the training set (used to choose); test shown for reference only.}
 \label{tab:ablation}
 \resizebox{\columnwidth}{!}{%
-\begin{tabular}{lcccc}
+\begin{tabular}{lccc}
 \toprule
-Features & CV IPIN & Test IPIN & Test B+F \% & Test err. (m) \\
+Features & CV err. (m) & Test err. (m) & Test B+F \% \\
 \midrule
 """ + "\n".join(blocks[:-1]) + r"""
 \bottomrule
@@ -77,15 +76,15 @@ tu = pd.read_csv(RES / "tuning_cv.csv")
 rows = []
 for _, r in tu.iterrows():
     ps = ", ".join(f"{k.replace('_', r'\_')}={v}" for k, v in json.loads(r.params).items())
-    rows.append(f"{r.model} & {ps} & {fmt_pct(r.building_floor_acc)} & {r.mean_error_m:.2f} & {r.ipin_score_m:.2f} \\\\")
+    rows.append(f"{r.model} & {ps} & {fmt_pct(r.building_floor_acc)} & {r.mean_error_m:.2f} \\\\")
 write("tuning", r"""\begin{table}[t]
 \centering
 \caption{Hyper-parameter search with user-grouped 5-fold CV on the training set.}
 \label{tab:tuning}
 \resizebox{\columnwidth}{!}{%
-\begin{tabular}{llccc}
+\begin{tabular}{llcc}
 \toprule
-Model & Parameters & B+F \% & Mean err. (m) & IPIN \\
+Model & Parameters & B+F \% & Mean err. (m) \\
 \midrule
 """ + "\n".join(rows) + r"""
 \bottomrule

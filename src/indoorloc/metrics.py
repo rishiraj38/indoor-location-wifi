@@ -12,10 +12,7 @@ def positioning_errors(y_true: pd.DataFrame, pred: dict) -> np.ndarray:
 
 
 def summarize(y_true: pd.DataFrame, pred: dict) -> dict:
-    """Main metrics for one model on one split.
-
-    IPIN 2015 score = 2-D error + 50 m per wrong building + 4 m per wrong floor.
-    """
+    """Main metrics for one model on one split."""
     b_ok = y_true["BUILDINGID"].to_numpy() == pred["BUILDINGID"]
     f_ok = y_true["FLOOR"].to_numpy() == pred["FLOOR"]
     err = positioning_errors(y_true, pred)
@@ -29,7 +26,6 @@ def summarize(y_true: pd.DataFrame, pred: dict) -> dict:
         "median_error_m": np.median(err),
         "p75_error_m": np.percentile(err, 75),
         "p95_error_m": np.percentile(err, 95),
-        "ipin_score_m": (err + 50 * ~b_ok + 4 * ~f_ok).mean(),
     }
 
 

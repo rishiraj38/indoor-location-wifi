@@ -1,16 +1,15 @@
 \begin{table*}[t]
 \centering
-\caption{Test-set results (official UJIIndoorLoc validation file, 1{,}111 scans). Accuracies in \%, errors in metres. MAE lon./lat. $=$ mean absolute error of each coordinate.
-IPIN score $=$ 2-D error $+\,50\times$ building miss $+\,4\times$ floor miss.}
+\caption{Test-set results (official UJIIndoorLoc validation file, 1{,}111 scans). Accuracies in \%, errors in metres. MAE lon./lat. $=$ mean absolute error of each coordinate.}
 \label{tab:main}
-\begin{tabular}{lccccccccc}
+\begin{tabular}{lcccccccc}
 \toprule
-Model & Building & Floor & Bldg+Floor & MAE lon. & MAE lat. & Mean err. & Median & P75 & IPIN score \\
+Model & Building & Floor & Bldg+Floor & MAE lon. & MAE lat. & Mean err. & Median & P75 \\
 \midrule
-Linear + Logistic Regression & 100.00 & 88.66 & 88.66 & 43.70 & 24.67 & 51.99 & 37.53 & 72.25 & 52.45 \\
-k-NN & 99.73 & 90.10 & 90.10 & 5.80 & 5.35 & \textbf{8.69} & 5.35 & 10.31 & 9.22 \\
-Random Forest & 99.82 & 90.91 & 90.82 & 6.82 & 6.20 & 10.22 & 7.63 & 13.35 & 10.68 \\
-Random Forest (per-building) & 99.82 & 91.27 & \textbf{91.18} & 6.19 & 5.77 & 9.37 & 7.07 & 12.19 & 9.81 \\
+Linear + Logistic Regression & 100.00 & 88.66 & 88.66 & 43.70 & 24.67 & 51.99 & 37.53 & 72.25 \\
+k-NN & 99.73 & 90.10 & 90.10 & 5.80 & 5.35 & \textbf{8.69} & 5.35 & 10.31 \\
+Random Forest & 99.82 & 90.91 & 90.82 & 6.82 & 6.20 & 10.22 & 7.63 & 13.35 \\
+Random Forest (per-building) & 99.82 & 91.27 & \textbf{91.18} & 6.19 & 5.77 & 9.37 & 7.07 & 12.19 \\
 \bottomrule
 \end{tabular}
 \end{table*}

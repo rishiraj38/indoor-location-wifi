@@ -11,9 +11,6 @@ signal strength (RSSI) in dBm. From one scan we predict three things:
 | Floor (0 to 4) | classification | accuracy |
 | Position (x, y) in metres | regression | mean distance error in metres |
 
-We also use a combined score from the IPIN indoor-positioning competition:
-`score = distance error + 50 m if building wrong + 4 m if floor wrong`.
-
 ## 2. The "+100" problem (missing values)
 
 RSSI values are negative. −30 dBm is a very strong signal and −100 dBm is barely heard. The dataset

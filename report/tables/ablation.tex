@@ -3,22 +3,22 @@
 \caption{Feature comparison. CV $=$ 5-fold GroupKFold by user on the training set (used to choose); test shown for reference only.}
 \label{tab:ablation}
 \resizebox{\columnwidth}{!}{%
-\begin{tabular}{lcccc}
+\begin{tabular}{lccc}
 \toprule
-Features & CV IPIN & Test IPIN & Test B+F \% & Test err. (m) \\
+Features & CV err. (m) & Test err. (m) & Test B+F \% \\
 \midrule
-\multicolumn{5}{l}{\emph{Random Forest (per-building)}} \\
-raw dBm, not-heard = -105 & 15.23 & 9.70 & 91.18 & 9.31 \\
-positive (shifted so not-heard = 0) & 15.23 & 9.70 & 91.18 & 9.31 \\
-powed (compress weak signals) & 15.71 & 9.88 & 91.09 & 9.44 \\
-raw + heard/not-heard flags & 15.55 & 10.28 & 90.28 & 9.80 \\
-raw + flags + scan summary & 15.82 & 9.86 & 91.00 & 9.50 \\
+\multicolumn{4}{l}{\emph{Random Forest (per-building)}} \\
+raw dBm, not-heard = -105 & 13.62 & 9.31 & 91.18 \\
+positive (shifted so not-heard = 0) & 13.62 & 9.31 & 91.18 \\
+powed (compress weak signals) & 14.01 & 9.44 & 91.09 \\
+raw + heard/not-heard flags & 13.99 & 9.80 & 90.28 \\
+raw + flags + scan summary & 14.37 & 9.50 & 91.00 \\
 \midrule
-\multicolumn{5}{l}{\emph{k-NN (k=5)}} \\
-raw dBm, not-heard = -105 & 14.46 & 9.22 & 90.10 & 8.69 \\
-positive (shifted so not-heard = 0) & 14.46 & 9.22 & 90.10 & 8.69 \\
-powed (compress weak signals) & 17.60 & 8.58 & 93.43 & 8.19 \\
-raw + heard/not-heard flags & 14.54 & 9.20 & 90.01 & 8.66 \\
+\multicolumn{4}{l}{\emph{k-NN (k=5)}} \\
+raw dBm, not-heard = -105 & 11.78 & 8.69 & 90.10 \\
+positive (shifted so not-heard = 0) & 11.78 & 8.69 & 90.10 \\
+powed (compress weak signals) & 15.09 & 8.19 & 93.43 \\
+raw + heard/not-heard flags & 11.76 & 8.66 & 90.01 \\
 \bottomrule
 \end{tabular}}
 \end{table}

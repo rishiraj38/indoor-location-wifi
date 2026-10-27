@@ -37,7 +37,6 @@
       "median_error_m": 37.5282,
       "p75_error_m": 72.2524,
       "p95_error_m": 141.8844,
-      "ipin_score_m": 52.4486,
       "fit_seconds": 0.6659,
       "predict_ms_per_scan": 0.0027
     },
@@ -51,7 +50,6 @@
       "median_error_m": 5.3546,
       "p75_error_m": 10.3135,
       "p95_error_m": 26.9922,
-      "ipin_score_m": 9.2216,
       "fit_seconds": 0.0595,
       "predict_ms_per_scan": 0.304
     },
@@ -65,7 +63,6 @@
       "median_error_m": 7.6294,
       "p75_error_m": 13.348,
       "p95_error_m": 27.4187,
-      "ipin_score_m": 10.6758,
       "fit_seconds": 4.1019,
       "predict_ms_per_scan": 0.0901
     },
@@ -79,7 +76,6 @@
       "median_error_m": 7.0726,
       "p75_error_m": 12.1882,
       "p95_error_m": 23.3115,
-      "ipin_score_m": 9.8052,
       "fit_seconds": 3.502,
       "predict_ms_per_scan": 0.2356
     }

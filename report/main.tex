@@ -56,7 +56,7 @@ baseline. Our contributions are:
 \item a leakage-free pipeline in which every statistic is fitted on training data, and model
 selection uses cross-validation that holds out whole users;
 \item a comparison of linear/logistic regression, $k$-NN and Random Forests (plain and hierarchical) on
-building accuracy, floor accuracy, coordinate error and the IPIN competition score;
+building accuracy, floor accuracy and coordinate error;
 \item an error analysis with a building/floor breakdown, floor confusion matrices, coordinate error maps and
 errors per phone.
 \end{itemize}
@@ -70,7 +70,7 @@ probabilistically, which showed how noisy single readings are.
 large multi-building, multi-floor public benchmark, with a $k$-NN baseline reaching 89.9\% floor accuracy
 and 7.9\,m mean error. A follow-up study~\cite{torres2015distance} compared 51 distance measures and four data
 representations for $k$-NN and found that the \emph{powed} representation, which compresses weak readings,
-helps. The IPIN 2016 competition~\cite{torres2017ipin} defined the combined score we report.
+helps. The IPIN 2016 competition~\cite{torres2017ipin} compared methods on building and floor accuracy and position error, the measures we report.
 
 \textbf{Machine learning models.} Bozkurt \emph{et al.}~\cite{bozkurt2015comparative} compared decision trees,
 naive Bayes, $k$-NN and ensembles on UJIIndoorLoc and found $k$-NN and tree ensembles strongest.
@@ -175,13 +175,7 @@ information is spread over many APs.
 \section{Methodology}
 \subsection{Problem formulation}
 Let $\mathbf{x}\in\mathbb{R}^{520}$ be a scan. We learn $f_b(\mathbf{x})\in\{0,1,2\}$,
-$f_f(\mathbf{x})\in\{0,\dots,4\}$ and $f_p(\mathbf{x})\in\mathbb{R}^2$. Following the IPIN
-competition~\cite{torres2017ipin}, the combined score of one prediction is
-\begin{equation}
-s = \lVert \mathbf{p}-\hat{\mathbf{p}}\rVert_2 + 50\cdot[b\neq\hat b] + 4\cdot[f\neq\hat f],
-\label{eq:ipin}
-\end{equation}
-so a wrong building costs as much as 50\,m of error and a wrong floor costs 4\,m.
+$f_f(\mathbf{x})\in\{0,\dots,4\}$ and $f_p(\mathbf{x})\in\mathbb{R}^2$. We report building accuracy, floor accuracy, the mean absolute error of each coordinate, and the 2-D position error $\lVert \mathbf{p}-\hat{\mathbf{p}}\rVert_2$ in metres. Models and settings are chosen by the mean 2-D error in cross-validation.
 
 \subsection{Feature engineering}
 \textbf{Missing signals.} ``Not detected'' means the signal is below the phone's sensitivity, so it is
@@ -223,7 +217,7 @@ smaller and more similar ones. The downside is that a wrong building prediction 
 \subsection{Validation protocol}
 Consecutive scans by the same user at the same spot are near-duplicates, so a random split would leak them. We use
 \textbf{5-fold GroupKFold with USERID as the group}: no user appears in both the training and validation parts of a fold. Feature
-variants, $k$ and \texttt{max\_features} are all selected by the mean CV IPIN score. Imputation and scaling are
+variants, $k$ and \texttt{max\_features} are all selected by the mean CV position error. Imputation and scaling are
 re-fitted inside every fold. The official validation file is used \textbf{once}, as the test set, after all
 choices are fixed.
 
@@ -233,8 +227,8 @@ choices are fixed.
 Table~\ref{tab:ablation} compares the feature variants. The \emph{raw} and \emph{positive} variants give identical results for both
 models, as theory predicts: the shift is order-preserving (trees) and cancels in Euclidean distances ($k$-NN).
 None of the richer variants improved the CV score, so the simplest representation (raw dBm with $-105$ for not
-detected) is used for every model. Powed features helped $k$-NN on the test set (IPIN 8.58 vs.\ 9.22) but hurt it
-in CV (17.60 vs.\ 14.46). Because test scores must not drive selection, we did not adopt them.
+detected) is used for every model. Powed features helped $k$-NN on the test set (8.19\,m vs.\ 8.69\,m) but hurt it
+in CV (15.09\,m vs.\ 11.78\,m). Because test scores must not drive selection, we did not adopt them.
 
 \input{tables/ablation}
 
@@ -243,7 +237,7 @@ Table~\ref{tab:tuning} shows the CV search. For $k$-NN, $k=5$ is best: $k=1$ is 
 For the Random Forest, \texttt{max\_features}$=\sqrt{p}$ ($\approx$21 APs per split) beats 10\% and 30\%, because
 more random, less correlated trees average better. The error drops quickly up to about 50 trees and is flat beyond 100
 (Fig.~\ref{fig:tuning}), so 300 trees is safely on the plateau. In CV, $k$-NN scores slightly better than the forest
-(IPIN 14.46 vs.\ 15.21; floor accuracy 74.1\% vs.\ 71.3\%), while the forest identifies the building more reliably (99.0\% vs.\ 96.7\%).
+(mean error 11.78\,m vs.\ 13.55\,m; floor accuracy 74.1\% vs.\ 71.3\%), while the forest identifies the building more reliably (99.0\% vs.\ 96.7\%).
 
 \input{tables/tuning}
 

@@ -82,17 +82,18 @@ for model_name, make_for in [
         _, _, te = test_eval(make)
         rows.append({"model": model_name, "features": feat_name,
                      **{f"cv_{k}": v for k, v in cv.items()}, **{f"test_{k}": v for k, v in te.items()}})
-        log(f"  {model_name:28s} {feat_name:38s} cv ipin {cv['ipin_score_m']:.2f} | test ipin {te['ipin_score_m']:.2f}")
+        log(f"  {model_name:28s} {feat_name:38s} cv err {cv['mean_error_m']:.2f} m | test err {te['mean_error_m']:.2f} m")
 abl = pd.DataFrame(rows)
 abl.to_csv(RES / "ablation_features.csv", index=False)
 
 
 def cv_pick(model_name):
     sub = abl[abl.model == model_name]
-    return feature_configs[sub.loc[sub.cv_ipin_score_m.idxmin(), "features"]]
+    return feature_configs[sub.loc[sub.cv_mean_error_m.idxmin(), "features"]]
 
 
-rf_feats, knn_feats = cv_pick("Random Forest (per-building)"), cv_pick("k-NN (k=5)")
+rf_feats = cv_pick("Random Forest (per-building)")
+knn_feats = rf_feats  # one feature set for every model; the k-NN comparison above is reported only
 lin_feats = feature_configs["raw dBm, not-heard = -105"]
 log("  chosen: RF", rf_feats, "| k-NN", knn_feats)
 
@@ -102,15 +103,15 @@ tuning = []
 for k in [1, 3, 5, 7, 11]:
     cv = cv_eval(lambda k=k: IndependentModel("knn", features=F(**knn_feats), k=k))
     tuning.append({"model": "k-NN", "params": json.dumps({"k": k}), **cv})
-    log(f"  k-NN k={k}: cv ipin {cv['ipin_score_m']:.2f}")
+    log(f"  k-NN k={k}: cv err {cv['mean_error_m']:.2f} m")
 for mf in ["sqrt", 0.1, 0.3]:
     p = {"max_features": mf, "n_estimators": 300}
     cv = cv_eval(lambda p=p: HierarchicalModel("rf", features=F(**rf_feats), **p))
     tuning.append({"model": "Random Forest", "params": json.dumps(p), **cv})
-    log(f"  RF {p}: cv ipin {cv['ipin_score_m']:.2f}")
+    log(f"  RF {p}: cv err {cv['mean_error_m']:.2f} m")
 tuning = pd.DataFrame(tuning)
 tuning.to_csv(RES / "tuning_cv.csv", index=False)
-best = {m: json.loads(tuning.loc[tuning[tuning.model == m].ipin_score_m.idxmin(), "params"])
+best = {m: json.loads(tuning.loc[tuning[tuning.model == m].mean_error_m.idxmin(), "params"])
         for m in ["k-NN", "Random Forest"]}
 (RES / "best_params.json").write_text(json.dumps(best, indent=2))
 log("  best:", best)
@@ -143,7 +144,7 @@ for name, make in MODELS.items():
     models[name], preds[name] = m, p
     final.append({"model": name, **te})
     log(f"  {name:30s} building {te['building_acc']:.4f} floor {te['floor_acc']:.4f} "
-        f"mean err {te['mean_error_m']:.2f} m  ipin {te['ipin_score_m']:.2f}")
+        f"mean err {te['mean_error_m']:.2f} m")
 final = pd.DataFrame(final)
 final.to_csv(RES / "test_metrics.csv", index=False)
 
@@ -268,11 +269,11 @@ save(fig, "per_phone_error")
 sub = abl[abl.model == "Random Forest (per-building)"]
 fig, ax = plt.subplots(figsize=(8, 3.2))
 y = np.arange(len(sub))
-ax.barh(y - 0.2, sub.cv_ipin_score_m, 0.38, color=SERIES[0], label="CV (unseen users)")
-ax.barh(y + 0.2, sub.test_ipin_score_m, 0.38, color=SERIES[1], label="Test")
+ax.barh(y - 0.2, sub.cv_mean_error_m, 0.38, color=SERIES[0], label="CV (unseen users)")
+ax.barh(y + 0.2, sub.test_mean_error_m, 0.38, color=SERIES[1], label="Test")
 ax.set_yticks(y, sub.features)
 ax.invert_yaxis()
-ax.set_xlabel("IPIN score (m), lower is better")
+ax.set_xlabel("Mean position error (m), lower is better")
 ax.set_title("Feature comparison — Random Forest (per-building)")
 ax.legend(loc="lower right")
 save(fig, "ablation_features")

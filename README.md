@@ -20,14 +20,13 @@ Wi-Fi signal strengths it measures. Dataset: [UJIIndoorLoc](https://archive.ics.
 
 ## Results (official test set, 1,111 scans)
 
-| Model | Building acc. | Floor acc. | Mean error | Median error | IPIN score |
-|---|---|---|---|---|---|
-| Linear + Logistic Regression | **100.0%** | 88.7% | 51.99 m | 37.53 m | 52.45 |
-| k-NN (k = 5) | 99.7% | 90.1% | **8.69 m** | **5.36 m** | **9.22** |
-| Random Forest | 99.8% | 90.9% | 10.22 m | 7.63 m | 10.68 |
-| Random Forest (per-building) | 99.8% | **91.3%** | 9.37 m | 7.07 m | 9.81 |
+| Model | Building acc. | Floor acc. | Mean error | Median error |
+|---|---|---|---|---|
+| Linear + Logistic Regression | **100.0%** | 88.7% | 51.99 m | 37.53 m |
+| k-NN (k = 5) | 99.7% | 90.1% | **8.69 m** | **5.36 m** |
+| Random Forest | 99.8% | 90.9% | 10.22 m | 7.63 m |
+| Random Forest (per-building) | 99.8% | **91.3%** | 9.37 m | 7.07 m |
 
-*IPIN score = position error + 50 m per wrong building + 4 m per wrong floor (lower is better).*
 
 ### Main findings
 
@@ -86,7 +85,7 @@ In Phase 2 we will build a multitask neural network with one shared trunk and th
 Planned work:
 - Shared dense layers (trunk) followed by task-specific heads.
 - Weighted loss combining cross-entropy (building, floor) and MSE (position).
-- Compare against the Phase 1 baselines using the **same** GroupKFold split and IPIN score.
+- Compare against the Phase 1 baselines using the **same** GroupKFold split and metrics.
 - Explore dropout and batch normalisation for regularisation.
 - Optionally fine-tune with buildings as separate subnetworks (mirroring the per-building RF strategy).
 
