@@ -11,3 +11,23 @@ report/*.out
 
 # private viva notes, never committed
 private/
+
+# IDE / editor
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Python build / dist artifacts
+*.egg-info/
+dist/
+build/
+*.whl
+
+# Jupyter runtime
+.jupyter/
+
+# pytest / coverage
+.pytest_cache/
+htmlcov/
+.coverage
