@@ -12,11 +12,11 @@ Wi-Fi signal strengths it measures. Dataset: [UJIIndoorLoc](https://archive.ics.
 
 | Name | Roll no. | Contribution |
 |---|---|---|
-| Rishi Raj | 2401010380 | Literature review, problem framing, metrics |
-| Aditya Samadhiya | 2401010037 | Data cleaning and exploratory analysis |
+| Rishi Raj | 2401010380 | Linear/Logistic, k-NN, cross-validation design |
+| Aditya Samadhiya | 2401010037 | Random Forest, error analysis, repository and report |
 | Yash Yadav | 2401010515 | Feature engineering and feature comparison |
-| Kaustubh Ranjan Mishra | 2401020116 | Linear/Logistic, k-NN, cross-validation design |
-| Yash Raj | 2401010514 | Random Forest, error analysis, repository and report |
+| Kaustubh Ranjan Mishra | 2401020116 | Literature review, problem framing, metrics |
+| Yash Raj | 2401010514 | Data cleaning and exploratory analysis |
 
 ## Results (official test set, 1,111 scans)
 
