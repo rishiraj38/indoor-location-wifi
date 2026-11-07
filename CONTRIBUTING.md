@@ -39,3 +39,25 @@ pip install -r requirements.txt
 1. Fork the repository and create your branch from `main`.
 2. Make your changes and ensure the notebook runs end-to-end without errors.
 3. Open a pull request with a clear description of what was changed and why.
+
+## Phase 2 workflow
+
+Full plan, owners and file list: `docs/phase2_plan.md`.
+
+1. Update your copy: `git checkout main && git pull`
+2. Make your branch: `git checkout -b phase2-<yourname>`
+3. Edit only the files you own (see the plan). Commit small and often.
+4. Push the branch: `git push -u origin phase2-<yourname>`
+5. Open a pull request to `main` on GitHub. Rishi reviews and merges.
+
+Never push to `main` directly, never `git push --force`, never rebase or rewrite shared history.
+If `git push` is rejected, run `git pull` and push again; do not force it.
+
+Phase 2 scripts:
+
+| Step | Command | Owner |
+|---|---|---|
+| Scaling and regularisation sweep | `python scripts/run_dl_regularisation.py` | Yash Yadav |
+| Ablation studies | `python scripts/run_dl_ablations.py` | Aditya Samadhiya |
+| Hybrid models | `python scripts/run_hybrid.py` | Aditya Samadhiya, Rishi Raj |
+| Final results and error analysis | `python scripts/run_dl_analysis.py` | Yash Raj |
