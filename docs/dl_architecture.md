@@ -80,7 +80,7 @@ The wider trunk is the change that matters: 12.52 m to 11.17 m at no cost on flo
 
 The Huber loss needs a word of care. Our first run used PyTorch's default threshold, which in our scaled
 coordinate units only switches to the linear part for errors above about 124 m, so it was MSE in disguise
-(12.72 m, the same as MSE at that weight). With the threshold set to 0.1 scaled units (about 12 m by 7 m) it is
+(0.5 times MSE, and its 12.72 m matched MSE at half the weight, 12.78 m at weight 10). With the threshold set to 0.1 scaled units (about 12 m by 7 m) it is
 a real Huber loss and does slightly better than MSE at the baseline width (12.33 m vs 12.52 m). With the wide
 trunk the two are a tie: 11.08 m vs 11.17 m on position, 82.2% vs 83.1% on floor. We keep MSE as the simpler
 choice. With the wider trunk the network beats both Phase 1 models in cross-validation on position (k-NN
@@ -100,5 +100,9 @@ Recorded in `results/dl_best.json` and used by every later script.
 | Early stopping | random 10% of training scans, patience 30, up to 300 epochs |
 | Input scaling | min-max to 0 to 1 |
 | Optimiser | Adam, learning rate 0.001, batch 256 |
+
+Tie-break rule: when two settings are within noise of each other in cross-validation (about 0.1 m or one
+percentage point), we keep the simpler or earlier one. That is why weight 20 is kept over 30 (12.52 m vs
+12.48 m) and MSE over Huber with the wide trunk (11.17 m vs 11.08 m, with better floor accuracy).
 
 Yash Yadav's regularisation sweep and Aditya's ablations start from these settings and change one thing at a time.

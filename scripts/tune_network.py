@@ -28,7 +28,9 @@ groups = mtr["USERID"].to_numpy()
 folds = user_folds(groups)
 
 rows = []
-for w_xy, patience in itertools.product([1, 3, 5, 10, 20], [15, 30]):
+# weights 30 and 50 (patience 30 only) were added after the first sweep to check that 20 is not just the edge of the grid
+settings = list(itertools.product([1, 3, 5, 10, 20], [15, 30])) + [(30, 30), (50, 30)]
+for w_xy, patience in settings:
     cv = cv_eval(lambda: MultitaskModel(loss_weights=(1, 1, w_xy), patience=patience, epochs=300), Xtr, ytr, groups, folds)
     rows.append({"w_xy": w_xy, "patience": patience, **cv})
     print(f"w_xy={w_xy:2d} patience={patience:2d}  building {cv['building_acc']:.3f}  floor {cv['floor_acc']:.3f}  err {cv['mean_error_m']:.2f} m", flush=True)

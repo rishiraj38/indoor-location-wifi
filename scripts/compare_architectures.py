@@ -28,10 +28,11 @@ BASE = dict(loss_weights=(1, 1, 20), patience=30, epochs=300)
 variants = {
     "baseline: 512-256, mse": {},
     "batch normalisation": dict(batch_norm=True),
-    "huber coordinate loss": dict(coord_loss="huber"),
+    "huber coordinate loss (delta 0.1)": dict(coord_loss="huber"),
     "wider trunk: 1024-512-256": dict(hidden=(1024, 512, 256)),
     "smaller trunk: 256": dict(hidden=(256,)),
     "more dropout: 0.5": dict(dropout=0.5),
+    "wider trunk + huber (delta 0.1)": dict(hidden=(1024, 512, 256), coord_loss="huber"),
 }
 
 rows = []
