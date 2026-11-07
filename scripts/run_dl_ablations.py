@@ -40,13 +40,16 @@ Xtr, ytr, mtr = split_xy(train)
 groups = mtr["USERID"].to_numpy()
 folds = user_folds(groups)
 
-reg_file = RES / "dl_best_regularisation.json"
-base = json.load(open(reg_file)) if reg_file.exists() else {}
+base = {}
+for name in ["dl_best.json", "dl_best_regularisation.json"]:  # later files override earlier ones
+    f = RES / name
+    if f.exists():
+        base.update(json.load(open(f)))
 print("base settings:", base or "defaults")
 
 
 def model(**kw):
-    return MultitaskModel(**base, **kw)
+    return MultitaskModel(**{**base, **kw})
 
 
 rows = []

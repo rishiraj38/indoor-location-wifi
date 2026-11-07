@@ -6,6 +6,7 @@ Compares, with user-grouped cross-validation:
   - input scaling: min-max vs standardise
   - dropout: 0, 0.2, 0.3, 0.5
   - weight decay: 0, 1e-5, 1e-4, 1e-3
+Starts from the settings in results/dl_best.json and changes one thing at a time.
 Writes results/dl_regularisation.csv and results/dl_best_regularisation.json.
 
 To do (Yash Yadav):
@@ -29,6 +30,10 @@ from indoorloc.deep import MultitaskModel
 from indoorloc.validation import cv_eval, user_folds
 
 RES = ROOT / "results"
+best_file = RES / "dl_best.json"
+base = json.load(open(best_file)) if best_file.exists() else {}
+print("base settings:", base or "defaults")
+
 train, _, _ = load_splits()
 Xtr, ytr, mtr = split_xy(train)
 groups = mtr["USERID"].to_numpy()
@@ -36,7 +41,7 @@ folds = user_folds(groups)
 
 rows = []
 for scaler, dropout, wd in itertools.product(["minmax", "standard"], [0.0, 0.2, 0.3, 0.5], [0.0, 1e-5, 1e-4, 1e-3]):
-    cv = cv_eval(lambda: MultitaskModel(scaler=scaler, dropout=dropout, weight_decay=wd), Xtr, ytr, groups, folds)
+    cv = cv_eval(lambda: MultitaskModel(**{**base, "scaler": scaler, "dropout": dropout, "weight_decay": wd}), Xtr, ytr, groups, folds)
     rows.append({"scaler": scaler, "dropout": dropout, "weight_decay": wd, **cv})
     print(f"{scaler:9s} dropout={dropout:.1f} wd={wd:g}  floor {cv['floor_acc']:.3f}  err {cv['mean_error_m']:.2f} m", flush=True)
 
