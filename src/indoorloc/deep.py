@@ -113,7 +113,8 @@ class MultitaskModel:
         else:
             tr, va = train_test_split(idx, test_size=self.val_fraction, random_state=self.seed)
 
-        train_loader = make_loader(Z[tr], yb[tr], yf[tr], xy[tr], self.batch_size, shuffle=True)
+        # batch norm cannot handle a final batch of one row, so drop it in that case
+        train_loader = make_loader(Z[tr], yb[tr], yf[tr], xy[tr], self.batch_size, shuffle=True, drop_last=self.batch_norm)
         val_loader = make_loader(Z[va], yb[va], yf[va], xy[va], 1024, shuffle=False)
 
         self.model_ = MultitaskMLP(Z.shape[1], self.hidden, self.dropout, self.batch_norm)
@@ -150,7 +151,8 @@ class MultitaskModel:
             loss = loss + wf * nn.functional.cross_entropy(of, yf)
         if "coords" in self.tasks:
             if self.coord_loss == "huber":
-                loss = loss + wxy * nn.functional.smooth_l1_loss(oxy, cxy)
+                # delta is in scaled units; 0.1 is about 12 m east-west and 7 m north-south
+                loss = loss + wxy * nn.functional.huber_loss(oxy, cxy, delta=0.1)
             else:
                 loss = loss + wxy * nn.functional.mse_loss(oxy, cxy)
         return loss

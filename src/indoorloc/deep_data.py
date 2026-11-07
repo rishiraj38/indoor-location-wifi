@@ -61,7 +61,7 @@ class CoordScaler:
         return np.asarray(Z, dtype=np.float64) * self.std_ + self.mean_
 
 
-def make_loader(X, y_building, y_floor, y_xy, batch_size=256, shuffle=True):
+def make_loader(X, y_building, y_floor, y_xy, batch_size=256, shuffle=True, drop_last=False):
     """Wrap numpy arrays as a PyTorch DataLoader."""
     ds = TensorDataset(
         torch.as_tensor(X, dtype=torch.float32),
@@ -69,7 +69,7 @@ def make_loader(X, y_building, y_floor, y_xy, batch_size=256, shuffle=True):
         torch.as_tensor(np.asarray(y_floor), dtype=torch.long),
         torch.as_tensor(y_xy, dtype=torch.float32),
     )
-    return DataLoader(ds, batch_size=batch_size, shuffle=shuffle)
+    return DataLoader(ds, batch_size=batch_size, shuffle=shuffle, drop_last=drop_last)
 
 
 class EarlyStopping:

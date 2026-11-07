@@ -10,8 +10,8 @@ with user-grouped cross-validation:
 Writes results/dl_ablations.csv and results/figures/dl_ablations.png.
 
 To do (Aditya):
-  - run it after Yash Yadav's regularisation settings exist
-    (results/dl_best_regularisation.json); the script picks them up
+  - run it after Rishi has folded Yash Yadav's regularisation result into
+    results/dl_best.json; every Phase 2 script starts from that one file
   - write up each ablation in docs/dl_ablations.md: what was removed, what
     happened to floor accuracy and position error, and what that tells us
   - add any ablation you think is missing (for example no early stopping)
@@ -40,11 +40,8 @@ Xtr, ytr, mtr = split_xy(train)
 groups = mtr["USERID"].to_numpy()
 folds = user_folds(groups)
 
-base = {}
-for name in ["dl_best.json", "dl_best_regularisation.json"]:  # later files override earlier ones
-    f = RES / name
-    if f.exists():
-        base.update(json.load(open(f)))
+best_file = RES / "dl_best.json"
+base = json.load(open(best_file)) if best_file.exists() else {}
 print("base settings:", base or "defaults")
 
 
