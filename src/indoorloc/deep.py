@@ -26,11 +26,14 @@ N_FLOORS = 5
 
 
 class MultitaskMLP(nn.Module):
-    def __init__(self, n_inputs, hidden=(512, 256), dropout=0.3):
+    def __init__(self, n_inputs, hidden=(512, 256), dropout=0.3, batch_norm=False):
         super().__init__()
         layers, prev = [], n_inputs
         for h in hidden:
-            layers += [nn.Linear(prev, h), nn.ReLU(), nn.Dropout(dropout)]
+            layers.append(nn.Linear(prev, h))
+            if batch_norm:
+                layers.append(nn.BatchNorm1d(h))
+            layers += [nn.ReLU(), nn.Dropout(dropout)]
             prev = h
         self.trunk = nn.Sequential(*layers)
         self.head_building = nn.Linear(prev, N_BUILDINGS)
@@ -51,16 +54,20 @@ class MultitaskModel:
 
     tasks: which heads get a loss. ("building", "floor", "coords") is the full
     multitask model; a single entry gives a single-task network for ablations.
+    coord_loss: "mse" or "huber". Huber behaves like MSE for small errors and
+    like MAE for large ones, so a few very wrong scans pull less on the weights.
     """
 
-    def __init__(self, features=None, scaler="minmax", hidden=(512, 256), dropout=0.3,
+    def __init__(self, features=None, scaler="minmax", hidden=(512, 256), dropout=0.3, batch_norm=False,
                  lr=1e-3, weight_decay=1e-4, batch_size=256, epochs=200, patience=15,
-                 loss_weights=(1.0, 1.0, 1.0), tasks=("building", "floor", "coords"),
+                 loss_weights=(1.0, 1.0, 1.0), coord_loss="mse", tasks=("building", "floor", "coords"),
                  val_fraction=0.1, val_split="random", seed=SEED, verbose=False):
         self.features = features or FingerprintFeatures(representation="raw", add_indicators=False, add_summary=False)
         self.scaler = scaler
         self.hidden = hidden
         self.dropout = dropout
+        self.batch_norm = batch_norm
+        self.coord_loss = coord_loss
         self.lr = lr
         self.weight_decay = weight_decay
         self.batch_size = batch_size
@@ -109,7 +116,7 @@ class MultitaskModel:
         train_loader = make_loader(Z[tr], yb[tr], yf[tr], xy[tr], self.batch_size, shuffle=True)
         val_loader = make_loader(Z[va], yb[va], yf[va], xy[va], 1024, shuffle=False)
 
-        self.model_ = MultitaskMLP(Z.shape[1], self.hidden, self.dropout)
+        self.model_ = MultitaskMLP(Z.shape[1], self.hidden, self.dropout, self.batch_norm)
         opt = torch.optim.Adam(self.model_.parameters(), lr=self.lr, weight_decay=self.weight_decay)
         stopper = EarlyStopping(self.patience)
         self.history_ = []
@@ -142,7 +149,10 @@ class MultitaskModel:
         if "floor" in self.tasks:
             loss = loss + wf * nn.functional.cross_entropy(of, yf)
         if "coords" in self.tasks:
-            loss = loss + wxy * nn.functional.mse_loss(oxy, cxy)
+            if self.coord_loss == "huber":
+                loss = loss + wxy * nn.functional.smooth_l1_loss(oxy, cxy)
+            else:
+                loss = loss + wxy * nn.functional.mse_loss(oxy, cxy)
         return loss
 
     @torch.no_grad()
