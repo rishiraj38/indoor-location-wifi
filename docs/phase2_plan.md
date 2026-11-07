@@ -23,13 +23,20 @@ viva (individual), IEEE report.
 
 Everyone: your own slides and your part of the viva.
 
-## Order of work
+## Deadline and order of work
 
-1. Week 1: Yash Yadav runs the regularisation grid and picks a setting. Rishi fixes the loss weights and
-   patience so position error is competitive. Kaustubh drafts the literature review and theory notes.
-2. Week 1 to 2: Aditya runs ablations and the hybrid. Yash Raj runs the final analysis once
-   `results/dl_best.json` exists.
-3. Week 2: report, slides, notebook, viva practice. Everyone reads every doc.
+Evaluation: Thursday 19 November 2026, 09:30 to 09:55, room A411 (team T108). The Google Form with the
+presentation (PPTX or PDF, under 10 MB), the report (PDF from LaTeX, under 10 MB) and the GitHub link must be
+submitted by 08:30 that morning, once, by one member using a university email.
+
+Dependencies decide the order, not weeks:
+
+1. First: Yash Yadav's regularisation results (Aditya's ablations read them) and Kaustubh's docs (nobody waits on him).
+2. Then: Rishi fixes the final network settings in `results/dl_best.json`.
+3. Then: Aditya's ablations and hybrid, and Yash Raj's final analysis (both read `dl_best.json`).
+4. Last: report, slides, notebook, viva practice. Everyone reads every doc.
+
+Needed by: steps 1 and 2 by 11 November, step 3 by 15 November, everything final by 17 November, leaving a day to check.
 
 Scripts are written so they run as they are. Your job is to run them, read the output, improve the parts
 listed under "To do" at the top of your file, and write the short doc that explains the result.
