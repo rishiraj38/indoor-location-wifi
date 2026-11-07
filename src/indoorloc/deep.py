@@ -56,7 +56,7 @@ class MultitaskModel:
     def __init__(self, features=None, scaler="minmax", hidden=(512, 256), dropout=0.3,
                  lr=1e-3, weight_decay=1e-4, batch_size=256, epochs=200, patience=15,
                  loss_weights=(1.0, 1.0, 1.0), tasks=("building", "floor", "coords"),
-                 val_fraction=0.1, seed=SEED, verbose=False):
+                 val_fraction=0.1, val_split="random", seed=SEED, verbose=False):
         self.features = features or FingerprintFeatures(representation="raw", add_indicators=False, add_summary=False)
         self.scaler = scaler
         self.hidden = hidden
@@ -69,6 +69,7 @@ class MultitaskModel:
         self.loss_weights = loss_weights
         self.tasks = tasks
         self.val_fraction = val_fraction
+        self.val_split = val_split
         self.seed = seed
         self.verbose = verbose
 
@@ -76,8 +77,17 @@ class MultitaskModel:
         return self.sc_.transform(self.fe_.transform(X))
 
     def fit(self, X, y: pd.DataFrame, groups=None):
-        """groups: USERID per row. If given, the early-stopping validation split
-        holds out whole users, like the Phase 1 cross-validation."""
+        """Train with early stopping on a validation part of the training data.
+
+        val_split="random": a random 10% of the training scans (default).
+        val_split="user": hold out whole users (needs groups = USERID per row).
+        We tried "user" first, to match the outer cross-validation, but with
+        only one or two users held out the validation loss is too noisy to
+        stop on: it often sits at its minimum after epoch 1, so training is
+        cut off before the network has learned anything. The outer
+        cross-validation is still grouped by user, so model selection and
+        the test score are unaffected.
+        """
         torch.manual_seed(self.seed)
         np.random.seed(self.seed)
 
@@ -91,7 +101,7 @@ class MultitaskModel:
         yf = y["FLOOR"].to_numpy()
 
         idx = np.arange(len(Z))
-        if groups is not None:
+        if self.val_split == "user" and groups is not None:
             tr, va = next(GroupShuffleSplit(n_splits=1, test_size=self.val_fraction, random_state=self.seed).split(idx, groups=groups))
         else:
             tr, va = train_test_split(idx, test_size=self.val_fraction, random_state=self.seed)
