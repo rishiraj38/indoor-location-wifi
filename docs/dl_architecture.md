@@ -51,12 +51,15 @@ the coordinate weight and the patience:
 | 10 | 30 | 96.3% | 82.4% | 12.78 |
 | 20 | 15 | 96.0% | 83.7% | 12.72 |
 | 20 | 30 | 96.5% | 83.5% | 12.52 |
+| 30 | 30 | 96.2% | 83.9% | 12.48 |
+| 50 | 30 | 98.2% | 83.5% | 12.79 |
 
 Floor accuracy is flat across the table, and every row is well above the Phase 1 cross-validation numbers
-(k-NN 74.1%, per-building Random Forest 71.3%). Position error improves as the coordinate weight rises and
-levels off from weight 5 upward. By the same rule as Phase 1 (lowest cross-validation position error) we use
-weight 20 and patience 30: 12.52 m, which sits between k-NN (11.78 m) and the forest (13.55 m) in
-cross-validation.
+(k-NN 74.1%, per-building Random Forest 71.3%; the Phase 1 tuning rows in `results/tuning_cv.csv` come from
+the per-building model, see `scripts/run_experiments.py`). Position error improves as the coordinate weight
+rises and levels off from weight 5 upward; weights 30 and 50 were added afterwards to confirm that 20 is not
+just the edge of the grid (30 is the same within noise, 50 is worse). We use weight 20 and patience 30:
+12.52 m, which sits between k-NN (11.78 m) and the forest (13.55 m) in cross-validation.
 
 ## 4. Architecture variants
 
@@ -66,15 +69,22 @@ Starting from that setting, each variant changes one thing.
 |---|---|---|---|
 | Baseline: 512-256, MSE | 96.5% | 83.5% | 12.52 |
 | Batch normalisation | 97.1% | 82.7% | 12.64 |
-| Huber coordinate loss | 96.6% | 83.0% | 12.72 |
+| Huber coordinate loss (delta 0.1) | 96.3% | 83.5% | 12.33 |
 | Wider trunk: 1024-512-256 | 96.1% | 83.1% | 11.17 |
+| Wider trunk + Huber | 95.6% | 82.2% | 11.08 |
 | Smaller trunk: 256 | 95.6% | 82.6% | 15.89 |
 | More dropout: 0.5 | 96.8% | 83.9% | 13.19 |
 
-The wider trunk is the only change that helps, and it helps a lot on position (12.52 m to 11.17 m) at no
-cost on floor. A single hidden layer of 256 units is clearly too small. Batch normalisation and the Huber loss
-make no real difference, and more dropout hurts position. With the wider trunk the network beats both Phase 1
-models in cross-validation on position (k-NN 11.78 m, forest 13.55 m) as well as on floor.
+The wider trunk is the change that matters: 12.52 m to 11.17 m at no cost on floor. A single hidden layer of
+256 units is clearly too small. Batch normalisation makes no difference and more dropout hurts position.
+
+The Huber loss needs a word of care. Our first run used PyTorch's default threshold, which in our scaled
+coordinate units only switches to the linear part for errors above about 124 m, so it was MSE in disguise
+(12.72 m, the same as MSE at that weight). With the threshold set to 0.1 scaled units (about 12 m by 7 m) it is
+a real Huber loss and does slightly better than MSE at the baseline width (12.33 m vs 12.52 m). With the wide
+trunk the two are a tie: 11.08 m vs 11.17 m on position, 82.2% vs 83.1% on floor. We keep MSE as the simpler
+choice. With the wider trunk the network beats both Phase 1 models in cross-validation on position (k-NN
+11.78 m, forest 13.55 m) as well as on floor.
 
 ## 5. Final settings
 
