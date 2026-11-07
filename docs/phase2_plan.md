@@ -31,10 +31,11 @@ submitted by 08:30 that morning, once, by one member using a university email. R
 
 Dependencies decide the order:
 
-1. First: Yash Yadav's regularisation results (Aditya's ablations read `results/dl_best_regularisation.json`) and
-   Kaustubh's docs (nobody waits on him). Rishi tunes the loss balance in parallel.
-2. Then: Rishi writes the final network settings to `results/dl_best.json`.
-3. Then: Aditya's ablations and hybrid, and Yash Raj's final analysis (both read `dl_best.json`).
+1. First: Yash Yadav's regularisation sweep (it starts from `results/dl_best.json`) and Kaustubh's docs
+   (nobody waits on him).
+2. Then: Rishi folds the regularisation winner into `results/dl_best.json`. That one file is the single source of
+   settings for every later script.
+3. Then: Aditya's ablations and hybrid, and Yash Raj's final analysis (all read `dl_best.json`).
 4. Last: report, slides, notebook, viva practice. Everyone reads every doc.
 
 Needed by: steps 1 and 2 by 11 November, step 3 by 15 November, everything merged by 17 November, leaving a day to check.
@@ -49,8 +50,8 @@ listed under "To do" at the top of your file, and write the short doc that expla
 - `validation.user_folds` and `validation.cv_eval` are the shared cross-validation. Use them; do not
   write a new split.
 - `MultitaskModel.embed(X)` returns the trunk features, used by the hybrid.
-- Settings flow through small JSON files in `results/`: `dl_best_regularisation.json` (Yash Yadav) feeds
-  the ablations; `dl_best.json` (Rishi, after the ablations) feeds the analysis and the hybrid.
+- Settings flow through one file, `results/dl_best.json`. Yash Yadav's sweep writes its winner to
+  `dl_best_regularisation.json`; Rishi copies it into `dl_best.json`; every later script reads only `dl_best.json`.
 
 ## Rules
 
