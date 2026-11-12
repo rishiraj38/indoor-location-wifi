@@ -1,11 +1,9 @@
 """Phase 2: input scaling and regularisation for the neural network.
 
-Owner: Yash Yadav.
-
 Compares, with user-grouped cross-validation:
-  - input scaling: min-max vs standardise
-  - dropout: 0, 0.2, 0.3, 0.5
-  - weight decay: 0, 1e-5, 1e-4, 1e-3
+  - input scaling: min-max, standard, powed
+  - dropout: 0.0, 0.3, 0.5
+  - weight decay: 0.0, 1e-4
 Starts from the settings in results/dl_best.json and changes one thing at a time.
 Writes results/dl_regularisation.csv and results/dl_best_regularisation.json.
 """
@@ -13,6 +11,7 @@ Writes results/dl_regularisation.csv and results/dl_best_regularisation.json.
 import itertools
 import json
 import sys
+import time
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
@@ -33,15 +32,40 @@ Xtr, ytr, mtr = split_xy(train)
 groups = mtr["USERID"].to_numpy()
 folds = user_folds(groups)
 
-rows = []
-for scaler, dropout, wd in itertools.product(["minmax", "standard"], [0.0, 0.2, 0.3, 0.5], [0.0, 1e-5, 1e-4, 1e-3]):
-    cv = cv_eval(lambda: MultitaskModel(**{**base, "scaler": scaler, "dropout": dropout, "weight_decay": wd}), Xtr, ytr, groups, folds)
-    rows.append({"scaler": scaler, "dropout": dropout, "weight_decay": wd, **cv})
-    print(f"{scaler:9s} dropout={dropout:.1f} wd={wd:g}  floor {cv['floor_acc']:.3f}  err {cv['mean_error_m']:.2f} m", flush=True)
+csv_file = RES / "dl_regularisation.csv"
+finished = set()
+if csv_file.exists():
+    try:
+        df_done = pd.read_csv(csv_file)
+        for _, r in df_done.iterrows():
+            finished.add((str(r["scaler"]), float(r["dropout"]), float(r["weight_decay"])))
+    except Exception:
+        pass
 
-df = pd.DataFrame(rows)
-df.to_csv(RES / "dl_regularisation.csv", index=False)
+for scaler, dropout, wd in itertools.product(["minmax", "standard", "powed"], [0.0, 0.3, 0.5], [0.0, 1e-4]):
+    if (scaler, float(dropout), float(wd)) in finished:
+        print(f"skip (already done): {scaler} dropout={dropout:.1f} wd={wd:g}")
+        continue
+    t0 = time.time()
+    cv = cv_eval(lambda: MultitaskModel(**{**base, "scaler": scaler, "dropout": dropout, "weight_decay": wd, "seed": 42}), Xtr, ytr, groups, folds)
+    elapsed = time.time() - t0
+    row = {"scaler": scaler, "dropout": dropout, "weight_decay": wd, **cv, "elapsed_s": round(elapsed, 1)}
+    header = not csv_file.exists()
+    pd.DataFrame([row]).to_csv(csv_file, mode="a", index=False, header=header)
+    finished.add((scaler, float(dropout), float(wd)))
+    print(f"{scaler:9s} dropout={dropout:.1f} wd={wd:g}  floor {cv['floor_acc']:.3f}  err {cv['mean_error_m']:.2f} m ({elapsed:.1f}s)", flush=True)
+
+df = pd.read_csv(csv_file)
 best = df.loc[df.mean_error_m.idxmin()]
-json.dump({"scaler": best.scaler, "dropout": float(best.dropout), "weight_decay": float(best.weight_decay)},
-          open(RES / "dl_best_regularisation.json", "w"), indent=2)
+json.dump(
+    {
+        "scaler": best.scaler,
+        "dropout": float(best.dropout),
+        "weight_decay": float(best.weight_decay),
+        "floor_acc": float(best.floor_acc),
+        "mean_error_m": float(best.mean_error_m),
+    },
+    open(RES / "dl_best_regularisation.json", "w"),
+    indent=2,
+)
 print("best:", best.to_dict())
