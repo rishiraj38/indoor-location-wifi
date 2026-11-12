@@ -32,22 +32,23 @@ Xtr, ytr, mtr = split_xy(train)
 groups = mtr["USERID"].to_numpy()
 folds = user_folds(groups)
 
+GRID = list(itertools.product(["minmax", "standard", "powed"], [0.0, 0.3, 0.5], [0.0, 1e-4]))
+
+# rows already in the CSV are skipped, so a stopped run can be started again;
+# delete the CSV first if you want a fresh sweep
 csv_file = RES / "dl_regularisation.csv"
 finished = set()
 if csv_file.exists():
-    try:
-        df_done = pd.read_csv(csv_file)
-        for _, r in df_done.iterrows():
-            finished.add((str(r["scaler"]), float(r["dropout"]), float(r["weight_decay"])))
-    except Exception:
-        pass
+    df_done = pd.read_csv(csv_file)
+    for _, r in df_done.iterrows():
+        finished.add((str(r["scaler"]), float(r["dropout"]), float(r["weight_decay"])))
 
-for scaler, dropout, wd in itertools.product(["minmax", "standard", "powed"], [0.0, 0.3, 0.5], [0.0, 1e-4]):
+for scaler, dropout, wd in GRID:
     if (scaler, float(dropout), float(wd)) in finished:
         print(f"skip (already done): {scaler} dropout={dropout:.1f} wd={wd:g}")
         continue
     t0 = time.time()
-    cv = cv_eval(lambda: MultitaskModel(**{**base, "scaler": scaler, "dropout": dropout, "weight_decay": wd, "seed": 42}), Xtr, ytr, groups, folds)
+    cv = cv_eval(lambda: MultitaskModel(**{**base, "scaler": scaler, "dropout": dropout, "weight_decay": wd}), Xtr, ytr, groups, folds)
     elapsed = time.time() - t0
     row = {"scaler": scaler, "dropout": dropout, "weight_decay": wd, **cv, "elapsed_s": round(elapsed, 1)}
     header = not csv_file.exists()
@@ -56,6 +57,9 @@ for scaler, dropout, wd in itertools.product(["minmax", "standard", "powed"], [0
     print(f"{scaler:9s} dropout={dropout:.1f} wd={wd:g}  floor {cv['floor_acc']:.3f}  err {cv['mean_error_m']:.2f} m ({elapsed:.1f}s)", flush=True)
 
 df = pd.read_csv(csv_file)
+# only rows from the current grid take part in the choice
+in_grid = [(str(r.scaler), float(r.dropout), float(r.weight_decay)) in set(GRID) for r in df.itertuples()]
+df = df[in_grid].reset_index(drop=True)
 best = df.loc[df.mean_error_m.idxmin()]
 json.dump(
     {
