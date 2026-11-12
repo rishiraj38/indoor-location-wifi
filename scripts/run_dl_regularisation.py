@@ -6,6 +6,7 @@ Compares, with user-grouped cross-validation:
   - weight decay: 0.0, 1e-4
 Starts from the settings in results/dl_best.json and changes one thing at a time.
 Writes results/dl_regularisation.csv and results/dl_best_regularisation.json.
+The full grid of 18 combinations takes about 85 minutes on a laptop CPU.
 """
 
 import itertools

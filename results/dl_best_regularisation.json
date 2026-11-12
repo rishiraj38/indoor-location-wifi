@@ -1,0 +1,7 @@
+{
+  "scaler": "minmax",
+  "dropout": 0.3,
+  "weight_decay": 0.0001,
+  "floor_acc": 0.8307504144682184,
+  "mean_error_m": 11.167477894840538
+}
