@@ -38,7 +38,7 @@ Test set:
 | Random Forest alone | 99.9 | 90.9 | 9.53 | 7.45 |
 | Hybrid A: trunk + forest | 100.0 | 92.7 | 7.75 | 5.73 |
 
-In cross-validation, Hybrid A clearly beats the Random Forest alone (83.0% vs 72.1% floor accuracy, 11.05 m vs 14.47 m mean error). Compared to the Multitask MLP alone, floor accuracy is 83.0% vs 82.9% and mean error is 11.05 m vs 11.08 m. Its median error improves from 7.82 m to 6.44 m, but its worst-case errors get larger (p95 35.2 m vs 32.0 m), and on building accuracy both trunk-based models sit below the forest on raw signals (99.3%).
+In cross-validation, Hybrid A clearly beats the Random Forest alone (83.0% vs 72.1% floor accuracy, 11.05 m vs 14.47 m mean error). Compared to the Multitask MLP alone, floor accuracy is 83.0% vs 82.9% and mean error is 11.05 m vs 11.08 m. Its median error improves from 7.82 m to 6.44 m, but its worst-case errors get larger (p95 35.2 m vs 32.0 m), and on building accuracy both trunk-based models sit below the forest on the signal features (99.3%).
 
 On the test set, Hybrid A reaches 7.75 m mean error (and 5.73 m median), which is better than the network (8.57 m) and the forest (9.53 m).
 

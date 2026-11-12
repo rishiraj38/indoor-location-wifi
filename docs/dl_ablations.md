@@ -33,7 +33,7 @@ We tested different weight combinations (w_b, w_f, w_xy) to see how balancing th
 | (0.5, 1, 5) | 96.3 | 84.2 | 11.25 |
 | Default baseline (1, 1, 20) | 96.5 | 82.9 | 11.08 |
 
-When the coordinate weight is low (1 or 3), position error is high (12.77 m to 14.50 m) because classification losses dominate the gradients. Giving coordinates higher weight (5 or 20) brings the position error down to around 11 m without hurting floor accuracy. The (0.5, 1, 5) setting has the best floor accuracy of the group (84.2%, 1.3 points above the default) at a cost of 0.17 m, so it would be a fair alternative; weight 20 was chosen earlier by the sweep in `results/dl_tuning.csv`, which had the lowest position error.
+When the coordinate weight is low (1 or 3), position error is high (12.77 m to 14.50 m) because classification losses dominate the gradients. Giving coordinates higher weight (5 or 20) brings the position error down to around 11 m without hurting floor accuracy. The (0.5, 1, 5) setting has the best floor accuracy of the group (84.2%, 1.4 points above the default) at a cost of 0.16 m, so it would be a fair alternative; weight 20 was chosen earlier by the sweep in `results/dl_tuning.csv`, where weight 30 was a tie (12.48 m vs 12.52 m) and the simpler value was kept.
 
 ## 3. Trunk Size
 
@@ -57,11 +57,11 @@ Our default model uses early stopping on a random 10% validation split of each t
 | Default (patience 30, up to 300 epochs) | 96.5 | 82.9 | 11.08 | 7.82 |
 | 100-epoch cap (best epoch kept) | 96.5 | 82.4 | 11.57 | 8.35 |
 
-With the 100-epoch cap the mean position error is 0.48 m worse and the median 0.53 m worse; floor accuracy is 0.5 percentage points lower, which is a tie. The final network on the full training set stopped after 108 epochs, so the wide trunk often needs more than 100 epochs to reach its validation minimum. The lesson is that the training budget must be long enough for early stopping to find the best epoch, not that a fixed length overfits. A run that truly skips early stopping (no restore of the best weights) would need a switch in `deep.py` and was not part of this study.
+With the 100-epoch cap the mean position error is 0.48 m worse and the median 0.53 m worse; floor accuracy is 0.5 percentage points lower, which is a tie. Both settings use the same seed, so their first 100 epochs are identical, and the three default rows in this file are identical to each other, which shows the runs are deterministic. The default can therefore only score differently if some folds found their best validation epoch after epoch 100. (On the full training set the final network stopped at epoch 108, so its best epoch was 78, inside the cap; the folds vary.) The lesson is that the training budget must be long enough for early stopping to find the best epoch, not that a fixed length overfits. A run that truly skips early stopping (no restore of the best weights) would need a switch in `deep.py` and was not part of this study.
 
 ## 5. Overall Conclusions
 
 The ablation studies confirm three things about the model:
 First, the multitask network matches three separate networks on floor accuracy and beats them on position error, at the cost of 1.8 points of building accuracy, with one model to train instead of three.
-Second, the coordinate loss needs a larger weight (5 or more) so the regression head gets enough gradient signal alongside the classification heads; with weight 1 the position error is 2 m worse.
-Third, a wide trunk (1024, 512, 256) gives the lowest position error, and training must be allowed to run long enough (more than 100 epochs) for early stopping to find the best epoch.
+Second, the coordinate loss needs a larger weight (5 or more) so the regression head gets enough gradient signal alongside the classification heads; with weight 1 the position error is 2.3 m worse.
+Third, a wide trunk (1024, 512, 256) gives the lowest position error, and training must be allowed to run long enough (past 100 epochs on some folds) for early stopping to find the best epoch.
