@@ -7,7 +7,8 @@ with user-grouped cross-validation:
   1. multitask (one network, three heads) vs three single-task networks
   2. loss weights for building / floor / coordinates
   3. trunk depth and width
-  4. early stopping (default patience vs none for 100 epochs)
+  4. training length: early stopping with patience 30 (up to 300 epochs) vs a 100-epoch cap
+     (the best validation epoch is kept in both cases)
 Writes results/dl_ablations.csv and results/figures/dl_ablations.png.
 """
 
@@ -88,7 +89,7 @@ for h in [(256,), (512, 256), (512, 256, 128), (1024, 512, 256)]:
     print("trunk", h, round(cv["floor_acc"], 3), round(cv["mean_error_m"], 2), flush=True)
 
 # 4. early stopping
-for name, kw in [("default", {}), ("none (100 epochs)", {"patience": 10000, "epochs": 100})]:
+for name, kw in [("default", {}), ("100-epoch cap (best epoch kept)", {"patience": 10000, "epochs": 100})]:
     cv = cv_eval(lambda kw=kw: model(**kw), Xtr, ytr, groups, folds)
     record("early_stopping", name, cv)
     print("early_stopping", name, round(cv["floor_acc"], 3), round(cv["mean_error_m"], 2), flush=True)

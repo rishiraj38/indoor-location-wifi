@@ -1,8 +1,8 @@
 # Hybrid Models: Combining the Neural Network and Random Forest
 
-Owner: Aditya Samadhiya (Random Forest side) and Rishi Raj (network side).
-
 Every number here comes from `results/hybrid.csv`. We evaluate all models with 5-fold cross-validation grouped by user, and once on the test set.
+
+The forest in this file uses the Phase 1 tree settings (300 trees, sqrt features, per building) but the default feature set of `FingerprintFeatures` (powed signals with heard flags and summary columns), not the raw dBm features Phase 1 finally chose. That is why the "Random Forest alone" row (90.9% floor, 9.53 m on test) is a little different from the Phase 1 result in `results/test_metrics.csv` (91.3%, 9.37 m). The comparison inside this file is still fair, because every hybrid is measured against the same forest and the same network it is built from. The network's own numbers also differ slightly from `docs/dl_architecture.md` because this run was made on a different computer (see the note in `docs/dl_ablations.md`).
 
 ## 1. Why Try a Hybrid?
 
@@ -24,11 +24,11 @@ Here are the cross-validation and test set numbers for Hybrid A alongside its tw
 
 Cross-validation (5-fold by user):
 
-| Model | Floor acc (%) | Mean error (m) | Median error (m) |
-|---|---|---|---|
-| Multitask MLP alone | 82.9 | 11.08 | 7.82 |
-| Random Forest alone | 72.1 | 14.47 | 9.72 |
-| Hybrid A: trunk + forest | 83.0 | 11.05 | 6.44 |
+| Model | Building acc (%) | Floor acc (%) | Mean error (m) | Median error (m) | p95 error (m) |
+|---|---|---|---|---|---|
+| Multitask MLP alone | 96.5 | 82.9 | 11.08 | 7.82 | 32.0 |
+| Random Forest alone | 99.3 | 72.1 | 14.47 | 9.72 | 41.3 |
+| Hybrid A: trunk + forest | 96.6 | 83.0 | 11.05 | 6.44 | 35.2 |
 
 Test set:
 
@@ -38,14 +38,14 @@ Test set:
 | Random Forest alone | 99.9 | 90.9 | 9.53 | 7.45 |
 | Hybrid A: trunk + forest | 100.0 | 92.7 | 7.75 | 5.73 |
 
-In cross-validation, Hybrid A clearly beats the Random Forest alone (83.0% vs 72.1% floor accuracy, 11.05 m vs 14.47 m mean error). Compared to the Multitask MLP alone, floor accuracy is 83.0% vs 82.9% and mean error is 11.05 m vs 11.08 m. Its median error improves from 7.82 m to 6.44 m.
+In cross-validation, Hybrid A clearly beats the Random Forest alone (83.0% vs 72.1% floor accuracy, 11.05 m vs 14.47 m mean error). Compared to the Multitask MLP alone, floor accuracy is 83.0% vs 82.9% and mean error is 11.05 m vs 11.08 m. Its median error improves from 7.82 m to 6.44 m, but its worst-case errors get larger (p95 35.2 m vs 32.0 m), and on building accuracy both trunk-based models sit below the forest on raw signals (99.3%).
 
 On the test set, Hybrid A reaches 7.75 m mean error (and 5.73 m median), which is better than the network (8.57 m) and the forest (9.53 m).
 
 ## 3. Hybrid B: Split by Target
 
 ### What it is and the reasoning
-Hybrid B uses each model where it was strongest. The multitask network predicts the building and floor, while the Phase 1 per-building Random Forest predicts the longitude and latitude coordinates.
+Hybrid B uses each model where it was strongest. The multitask network predicts the building and floor, while a per-building Random Forest predicts the longitude and latitude coordinates.
 
 ### Results
 
