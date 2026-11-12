@@ -8,7 +8,7 @@ A neural network multiplies each input by a weight and sums the products across 
 
 ## 2. Scaling methods
 
-Min-max scaling shifts and scales each column to the range [0, 1] using the minimum and maximum values in the training set.
+Min-max scaling shifts and scales all inputs to [0, 1] using the single minimum and maximum of the training matrix (-105 and 0), so the not-heard value maps exactly to 0.
 
 Standard scaling subtracts the training mean and divides by the training standard deviation for each column to give zero mean and unit variance.
 
@@ -28,7 +28,7 @@ In our network weight decay is the `weight_decay` argument of the Adam optimiser
 
 ## 5. Results
 
-The table below shows 5-fold cross-validation grouped by user, from `results/dl_regularisation.csv`. Every run starts from the settings in `results/dl_best.json` (trunk 1024-512-256, loss weights 1/1/20, patience 30) and changes only the scaler, the dropout rate and the weight decay. Each run took 2.5 to 6 minutes on one laptop CPU; the whole sweep took about 85 minutes.
+The table below shows 5-fold cross-validation grouped by user, from `results/dl_regularisation.csv`. Every run starts from the settings in `results/dl_best.json` (trunk 1024-512-256, loss weights 1/1/20, patience 30) and changes only the scaler, the dropout rate and the weight decay. Each run took 2.3 to 5.8 minutes on one laptop CPU; the 18 runs add up to 80 minutes.
 
 | Scaler | Dropout | Weight decay | Floor accuracy (%) | Mean error (m) | Median error (m) |
 |---|---|---|---|---|---|
@@ -55,10 +55,10 @@ The best row is min-max scaling with dropout 0.3 and weight decay 1e-4: 83.1% fl
 
 What the table says, in order of effect size:
 
-1. The scaler matters most. Standard scaling is far worse than min-max in every setting (21 to 24 m against 11 to 12 m, and floor accuracy in the 73 to 76% range against 81 to 83%). Standardising each router column divides by that column's standard deviation, and most columns are nearly constant at the not-heard value, so the few scans where a router is heard become very large inputs. Min-max keeps every input between 0 and 1 and the not-heard value exactly at 0.
-2. Powed scaling, which helped the Random Forest slightly in Phase 1, sits in between here (13.8 to 19.4 m). Raising the scaled signal to the power e pushes weak signals almost to 0, and the network seems to use those weak signals; for a tree they were mostly noise. The best powed row (dropout 0.5, no weight decay) reaches the same floor accuracy as the default, 83.1%, but 2.6 m more position error.
-3. Dropout and weight decay help together. With min-max, no regularisation gives 12.40 m; dropout alone gives 11.76 m; weight decay alone 12.18 m; both together 11.17 m. Floor accuracy follows the same pattern (82.5% with neither, 83.1% with both).
-4. Dropout 0.3 and 0.5 are indistinguishable once weight decay is on (11.17 m both), so the network is not sensitive to the exact rate.
+1. The scaler matters most. Standard scaling is far worse than min-max in every setting (20.5 to 24.3 m against 11.2 to 12.4 m, and floor accuracy of 72.9 to 75.9% against 81.3 to 83.1%). Standardising each router column divides by that column's standard deviation, and most columns are nearly constant at the not-heard value, so the few scans where a router is heard become very large inputs. Min-max keeps every input between 0 and 1 and the not-heard value exactly at 0.
+2. Powed scaling sits in between (13.8 to 19.4 m). It did not help the Random Forest in Phase 1 either (14.01 m against 13.62 m for raw signals in `results/ablation_features.csv`), and it is worse again here. Raising the scaled signal to the power e pushes weak signals almost to 0, and both models seem to get something out of those weak signals. The best powed row (dropout 0.5, no weight decay) reaches the same floor accuracy as the default, 83.1%, but 2.65 m more position error.
+3. Dropout and weight decay help together. With min-max, no regularisation gives 12.40 m; dropout alone gives 11.76 m; weight decay alone 12.18 m; both together 11.17 m. Floor accuracy does not follow the same pattern: each regulariser on its own lowers it slightly (82.5% with neither, 82.1% with dropout alone, 81.3% with weight decay alone) and only the combination raises it, to 83.1%.
+4. With min-max, dropout 0.3 and 0.5 are indistinguishable once weight decay is on (11.17 m both), so the network is not sensitive to the exact rate there. With powed the rate still matters (15.10 m against 13.82 m without weight decay).
 
 ## 6. Early stopping
 
@@ -66,4 +66,4 @@ Our model stops on a random 10% of the training scans with patience 30. The trai
 
 ## 7. Grid reduction
 
-The grid was cut from 32 to 18 combinations (3 scalers, 3 dropout rates, 2 weight decays) to fit the time. Dropout 0.2 and weight decay 1e-5 and 1e-3 were dropped because they are too close to the values kept to separate under the tie rule, and the result above (0.3 and 0.5 tie) confirms that for dropout.
+The grid is 18 combinations (3 scalers, 3 dropout rates, 2 weight decays), about 80 minutes of training. The planned grid had dropout 0.2 and weight decay 1e-5 and 1e-3 as well, which would have doubled the time; they were dropped to fit the schedule. Dropout 0.2 sits between two values that tie with min-max, so little is lost there. Weight decay 1e-3 is a genuinely different setting that remains untested.
