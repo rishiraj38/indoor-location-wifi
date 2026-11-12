@@ -1,9 +1,9 @@
 """Data preparation for the neural network.
 
-Owner: Yash Yadav.
-
 Everything here is fitted on training data only, like FingerprintFeatures.
 """
+
+import math
 
 import numpy as np
 import torch
@@ -15,6 +15,7 @@ class RSSIScaler:
 
     method="minmax": (x - min) / (max - min), so every value is in [0, 1]
     method="standard": (x - mean) / std per column
+    method="powed": (x - lo) / (hi - lo) clipped to [0, 1] and raised to power math.e
     """
 
     def __init__(self, method="minmax"):
@@ -27,6 +28,9 @@ class RSSIScaler:
         elif self.method == "standard":
             self.mean_ = X.mean(axis=0)
             self.std_ = X.std(axis=0) + 1e-6
+        elif self.method == "powed":
+            self.lo_ = float(X.min())
+            self.hi_ = float(X.max())
         else:
             raise ValueError(self.method)
         return self
@@ -35,7 +39,12 @@ class RSSIScaler:
         X = np.asarray(X, dtype=np.float32)
         if self.method == "minmax":
             return (X - self.lo_) / (self.hi_ - self.lo_)
-        return (X - self.mean_) / self.std_
+        if self.method == "standard":
+            return (X - self.mean_) / self.std_
+        if self.method == "powed":
+            pos = (X - self.lo_) / (self.hi_ - self.lo_)
+            return np.clip(pos, 0.0, 1.0) ** math.e
+        raise ValueError(self.method)
 
 
 class CoordScaler:
