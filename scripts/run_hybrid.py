@@ -15,12 +15,6 @@ Two candidates, both with a reason behind them:
 
 Evaluated with user-grouped CV first, then once on the test set. Writes
 results/hybrid.csv. A hybrid only counts if it beats both of its parts.
-
-To do:
-  - Rishi: settle the network settings (results/dl_best.json) from the
-    regularisation and ablation results
-  - Aditya: run the hybrids, add the figure, and write docs/hybrid.md with the
-    reasoning and whether each one earned its place
 """
 
 import json

@@ -42,11 +42,9 @@ pip install -r requirements.txt
 
 ## Phase 2 workflow
 
-Full plan, owners and file list: `docs/phase2_plan.md`.
-
 1. Update your copy: `git checkout main && git pull`
 2. Make your branch: `git checkout -b phase2-<yourname>`
-3. Edit only the files you own (see the plan). Commit small and often.
+3. Edit only the files you own. Commit small and often.
 4. Push the branch: `git push -u origin phase2-<yourname>`
 5. Open a pull request to `main` on GitHub. Rishi reviews and merges.
 

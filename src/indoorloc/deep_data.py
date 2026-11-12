@@ -3,10 +3,6 @@
 Owner: Yash Yadav.
 
 Everything here is fitted on training data only, like FingerprintFeatures.
-This file has a working baseline so the model can train. Planned work:
-  - compare scaling methods (min-max vs standardise) with user-grouped CV
-  - tune dropout and weight decay with the model's `dropout` / `weight_decay`
-    settings and write the results to results/dl_regularisation.csv
 """
 
 import numpy as np

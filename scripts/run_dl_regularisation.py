@@ -8,12 +8,6 @@ Compares, with user-grouped cross-validation:
   - weight decay: 0, 1e-5, 1e-4, 1e-3
 Starts from the settings in results/dl_best.json and changes one thing at a time.
 Writes results/dl_regularisation.csv and results/dl_best_regularisation.json.
-
-To do (Yash Yadav):
-  - run it, read the table, pick the best setting and explain why in
-    docs/dl_regularisation.md (one page: what each setting does, what won, why)
-  - add the "powed" representation as a third scaling option and test it
-  - check early-stopping patience (10, 15, 30) and report the effect
 """
 
 import itertools

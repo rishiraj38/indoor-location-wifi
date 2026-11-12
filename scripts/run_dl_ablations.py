@@ -8,13 +8,6 @@ with user-grouped cross-validation:
   2. loss weights for building / floor / coordinates
   3. trunk depth and width
 Writes results/dl_ablations.csv and results/figures/dl_ablations.png.
-
-To do (Aditya):
-  - run it after Rishi has folded Yash Yadav's regularisation result into
-    results/dl_best.json; every Phase 2 script starts from that one file
-  - write up each ablation in docs/dl_ablations.md: what was removed, what
-    happened to floor accuracy and position error, and what that tells us
-  - add any ablation you think is missing (for example no early stopping)
 """
 
 import json

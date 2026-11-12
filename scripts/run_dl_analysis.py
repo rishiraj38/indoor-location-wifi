@@ -8,13 +8,6 @@ official test file once, and writes:
   results/dl_test_metrics.csv, results/dl_breakdown_*.csv
   results/figures/dl_confusion_floor.png, dl_error_map.png, dl_training_curve.png,
   results/figures/aml_vs_dl.png and results/aml_vs_dl.csv
-
-To do (Yash Raj):
-  - run it after results/dl_best.json exists (written by run_hybrid.py or by
-    hand from the ablation and regularisation results)
-  - make the figures match the Phase 1 ones in style
-  - write docs/dl_results.md: the comparison table and what changed vs Phase 1
-    (which errors got better, which did not, and why you think so)
 """
 
 import json
