@@ -1,10 +1,10 @@
 """Loading and cleaning the UJIIndoorLoc fingerprint database.
 
-Data cleaning authored by: Yash Raj (2401010514)
-  - Removed 637 duplicate rows from the training set.
-  - Removed 73 scans where no access point was heard.
-  - Replaced the sentinel value +100 ("not heard") with -105 dBm.
-  - Dropped 55 APs never heard in training.
+Owner: Yash Raj.
+
+Cleaning: 637 duplicate rows and 73 scans with no access point heard are removed
+from the training set; the "not heard" value +100 is replaced with -105 dBm; the 55
+access points never heard in training are dropped. See docs/cleaning_log.md.
 """
 
 from pathlib import Path

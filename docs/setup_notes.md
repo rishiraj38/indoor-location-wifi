@@ -51,6 +51,6 @@ Do **not** change this value if you want to reproduce the published results exac
 
 | Problem | Fix |
 |---|---|
-| `ModuleNotFoundError: indoorloc` | Run `pip install -e .` or ensure `src/` is on `PYTHONPATH` |
+| `ModuleNotFoundError: indoorloc` | Run from the repository root; the scripts and notebooks add `src/` to the path themselves. Otherwise `export PYTHONPATH=src` |
 | Missing figures in notebook | Run the notebook from the top; it draws its own figures |
 | `tectonic` not found for PDF build | Install from <https://tectonic-typesetting.github.io> or upload `report/` to Overleaf |
