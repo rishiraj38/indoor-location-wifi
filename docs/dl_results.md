@@ -151,3 +151,4 @@ The network trained for 108 epochs before early stopping triggered, out of a max
 ## 6. What changed from Phase 1 to Phase 2
 
 The main gain is floor accuracy: 91.3% (RF per-building) to 92.3% (MLP). The biggest single improvement is Building 1, where the forest's most common mistake (43 floor 1 predicted as floor 2) fell to 29 with the network. Position error also improved modestly: 9.37 m down to 8.66 m on average, and the tail (p95) dropped by about 2.5 m. The shared trunk is the likely reason: by learning building, floor, and position together, the trunk can pick up signal patterns that help all three. The forest trains three separate problems and cannot share what it learns about floor geometry with the position prediction. The network's one clear weakness is that it needs more than a minute to train from scratch; the forest takes under 4 seconds.
+
