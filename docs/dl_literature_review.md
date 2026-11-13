@@ -12,6 +12,8 @@ Our indoor positioning problem maps directly onto this idea. Building and floor 
 
 ## 2. Neural networks on UJIIndoorLoc
 
+All three papers below use the UJIIndoorLoc data of Torres-Sospedra et al. (2014), the same training and validation files we use, so their numbers are comparable with ours.
+
 Nowicki and Wietrzykowski (2017) used a stacked autoencoder followed by a feed-forward classifier on UJIIndoorLoc. The autoencoder compressed the 520-dimensional RSSI vector into a lower-dimensional representation in an unsupervised step, then a small classifier predicted building and floor. They tried several ways of handling the not-detected value and got their best result by replacing it with -110 dBm and scaling all inputs together, which is close to what we do (-105, then min-max). Their best configuration reached about 92% combined building-and-floor accuracy. We take from this paper the confirmation that deep features from raw RSSI can outperform k-NN on building and floor, but note they did not predict coordinates and trained two networks in sequence rather than one joint network.
 
 Kim, Lee and Huang (2018) proposed a single scalable deep network with an autoencoder front end and a multi-label classifier for building, floor and position on UJIIndoorLoc. On UJIIndoorLoc they reported 99.82% building accuracy, 91.27% floor accuracy and a mean position error of 9.29 m, with a network small enough to run on a phone. What they showed us is that combining all three targets in one network is feasible and practical; our simpler MLP trunk replaces their autoencoder pre-training stage and is trained end-to-end with a combined loss.
@@ -47,7 +49,7 @@ We did not find a paper on UJIIndoorLoc that trains a Random Forest on features 
 4. K. S. Kim, S. Lee, and K. Huang, "A scalable deep neural network architecture for multi-building and multi-floor indoor localization based on Wi-Fi fingerprinting," *Big Data Analytics*, vol. 3, art. 4, 2018.
 5. X. Song et al., "A novel convolutional neural network based indoor localization framework with WiFi fingerprinting," *IEEE Access*, vol. 7, pp. 110698–110709, 2019.
 6. N. Srivastava, G. Hinton, A. Krizhevsky, I. Sutskever, and R. Salakhutdinov, "Dropout: A simple way to prevent neural networks from overfitting," *Journal of Machine Learning Research*, vol. 15, no. 1, pp. 1929–1958, 2014.
-7. A. Krogh and J. A. Hertz, "A simple weight decay can improve generalization," in *Advances in Neural Information Processing Systems 4*, pp. 950–957, 1992.
-8. D. P. Kingma and J. Ba, "Adam: A method for stochastic optimization," in *Proc. Int. Conf. on Learning Representations (ICLR)*, 2015.
+7. D. P. Kingma and J. Ba, "Adam: A method for stochastic optimization," in *Proc. Int. Conf. on Learning Representations (ICLR)*, 2015.
+8. A. Krogh and J. A. Hertz, "A simple weight decay can improve generalization," in *Advances in Neural Information Processing Systems 4*, Morgan Kaufmann, pp. 950–957, 1992.
 9. L. Prechelt, "Early stopping, but when?," in *Neural Networks: Tricks of the Trade*, Springer LNCS vol. 1524, pp. 55–69, 1998.
 10. B. A. Akram, A. H. Akbar, and O. Shafiq, "HybLoc: Hybrid indoor Wi-Fi localization using soft clustering-based random decision forest ensembles," *IEEE Access*, vol. 6, pp. 38251–38272, 2018.

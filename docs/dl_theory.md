@@ -85,7 +85,9 @@ which pushes p_c toward 1.
 Mean squared error (MSE) for coordinates measures the average squared distance between the
 predicted and true scaled values:
 
-    MSE = (1/N) * sum_i [ (x_pred_i - x_true_i)^2 + (y_pred_i - y_true_i)^2 ]
+    MSE = (1/(2N)) * sum_i [ (x_pred_i - x_true_i)^2 + (y_pred_i - y_true_i)^2 ]
+
+(the mean over both coordinates of all N scans, which is what PyTorch's mse_loss computes)
 
 Why scale the coordinates first? Raw UTM latitude in this dataset is around 4,864,000 and
 longitude around -7,500. A freshly initialised network outputs values near 0, so its first errors
@@ -169,9 +171,9 @@ point of best generalisation.
 
 The problem we hit. Our first implementation held out whole users for the early-stopping check,
 to match the outer cross-validation design. With only one or two users held out, the validation loss was
-too noisy to stop on: its lowest value was usually at epoch 1 and later epochs never beat it by the
-minimum step. Training ran on for the 30 patience epochs and then restored the epoch-1 weights,
-which were barely trained. On one fold this
+too noisy to stop on: in every fold its lowest value was at epoch 1 and later epochs never beat it by
+the minimum step. Training ran on for the patience window (15 epochs, the default at the time) and
+then restored the epoch-1 weights, which were barely trained. On one fold this
 produced 35% floor accuracy and 131 m position error. Switching to a random 10% split (which
 samples from all users and positions in proportion) fixed the problem: the same fold gave 95%
 floor accuracy. The lesson is ours rather than Prechelt's: the early-stopping signal must be large and mixed
