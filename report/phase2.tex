@@ -273,7 +273,7 @@ comparison with the final trunk: 13.35\,m at weight 1 against 11.08\,m at weight
 \subsection{Training}
 
 We use the Adam optimiser~\cite{kingma2015adam} with learning rate $10^{-3}$, weight decay
-$10^{-4}$ and batch size 256. Adam tracks a running mean and variance of the gradient for each
+$10^{-4}$ and batch size 256. Adam tracks a running mean and a running second moment of the gradient for each
 weight and divides the update by the square root of the second moment. This gives each weight an
 individual effective step size, which is especially useful for sparse inputs: APs that are rarely
 heard contribute zero gradient in most batches and large gradients in the few batches where they
@@ -282,7 +282,7 @@ appear. Training runs for up to 300 epochs per fold.
 \textbf{Early-stopping problem and fix.} Our first implementation held out whole users for the
 early-stopping validation check, to match the outer 5-fold cross-validation. With only one or two
 users held out per fold, the validation loss was too noisy to stop on: its lowest value was at
-epoch~1 and no later epoch beat it by the minimum step, so after the 30 patience epochs the
+epoch~1 and no later epoch beat it by the minimum step, so after the patience window (15 epochs, the default at the time) the
 stopper restored the epoch-1 weights, which were barely trained. On one fold this produced 35\%
 floor accuracy and 131\,m mean position error, whatever the training length.
 
