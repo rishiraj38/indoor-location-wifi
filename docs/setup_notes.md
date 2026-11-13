@@ -2,7 +2,7 @@
 
 ## Python version
 
-The project was developed and tested with **Python 3.11**.  
+The project was developed and tested with Python 3.11 and PyTorch 2.15 (CPU).  
 Earlier versions (3.9+) should also work, but have not been verified.
 
 ## Virtual environment
@@ -36,8 +36,10 @@ data/
       trainingData.csv
       validationData.csv
   processed/
-    train.csv
-    test.csv
+    train_cleaned.csv
+    train_model_ready.csv
+    test_model_ready.csv
+    processing_info.json
 ```
 
 ## Reproducibility
@@ -50,5 +52,5 @@ Do **not** change this value if you want to reproduce the published results exac
 | Problem | Fix |
 |---|---|
 | `ModuleNotFoundError: indoorloc` | Run `pip install -e .` or ensure `src/` is on `PYTHONPATH` |
-| Missing figures in notebook | Run `python scripts/run_eda.py` first |
+| Missing figures in notebook | Run the notebook from the top; it draws its own figures |
 | `tectonic` not found for PDF build | Install from <https://tectonic-typesetting.github.io> or upload `report/` to Overleaf |
