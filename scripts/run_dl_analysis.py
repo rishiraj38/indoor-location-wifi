@@ -49,7 +49,7 @@ per_group_error(yte, pred, mte["PHONEID"]).to_csv(RES / "dl_breakdown_phone.csv"
 h = pd.DataFrame(model.history_)
 fig, ax = plt.subplots(figsize=(6, 3.5))
 ax.plot(h.epoch, h.train_loss, label="train", color=SERIES[0])
-ax.plot(h.epoch, h.val_loss, label="validation (held-out users)", color=SERIES[1])
+ax.plot(h.epoch, h.val_loss, label="validation (random 10%)", color=SERIES[1])
 ax.set_xlabel("epoch")
 ax.set_ylabel("loss")
 ax.set_title("Training curve")
@@ -73,7 +73,7 @@ for ax, b in zip(axes, range(3)):
     ax.set_ylabel("True floor")
     ax.set_title(f"Building {b}: {np.trace(cm) / cm.sum() * 100:.1f}% correct")
     ax.grid(False)
-fig.suptitle("Floor confusion matrices, multitask MLP (test set)", fontsize=11, fontweight="bold")
+fig.suptitle("Floor confusion matrices - Multitask MLP (test set)", fontsize=11, fontweight="bold")
 save(fig, "dl_confusion_floor")
 
 # error map
@@ -89,22 +89,36 @@ fig.colorbar(sc, ax=ax, label="Position error (m), capped at 30")
 ax.set_aspect("equal")
 ax.set_xlabel("Metres east")
 ax.set_ylabel("Metres north")
-ax.set_title("Error map, multitask MLP (grey lines join the worst 10% to their prediction)")
+ax.set_title("Error map - Multitask MLP\n(dot = true position; grey line joins the worst 10% to their prediction)")
 save(fig, "dl_error_map")
 
 # comparison with Phase 1
+SHORT = {
+    "Linear + Logistic Regression": "Linear/Logistic",
+    "k-NN": "k-NN",
+    "Random Forest": "RF",
+    "Random Forest (per-building)": "RF per-building",
+    "Multitask MLP": "Multitask MLP",
+}
 p1 = pd.read_csv(RES / "test_metrics.csv")
 cmp = pd.concat([p1, pd.DataFrame([{"model": "Multitask MLP", **metrics}])], ignore_index=True)
 cmp.to_csv(RES / "aml_vs_dl.csv", index=False)
-fig, axes = plt.subplots(1, 2, figsize=(11, 3.6))
-axes[0].barh(cmp.model, cmp.building_floor_acc * 100, color=SERIES[0], height=0.6)
+labels = [SHORT.get(m, m) for m in cmp.model]
+fig, axes = plt.subplots(1, 2, figsize=(11, 3.8))
+axes[0].barh(labels, cmp.building_floor_acc * 100, color=SERIES[0], height=0.6)
+for i, v in enumerate(cmp.building_floor_acc * 100):
+    axes[0].text(v + 0.2, i, f"{v:.1f}%", va="center", color=INK_2, fontsize=9)
 axes[0].set_xlim(80, 100)
 axes[0].set_xlabel("Building + floor correct (%)")
 axes[0].invert_yaxis()
-axes[1].barh(cmp.model, cmp.mean_error_m, color=SERIES[0], height=0.6)
-axes[1].set_xlabel("Mean position error (m)")
+axes[0].set_title("Building + floor accuracy (test set)")
+axes[1].barh(labels, cmp.mean_error_m, color=SERIES[0], height=0.6)
+for i, v in enumerate(cmp.mean_error_m):
+    axes[1].text(v + 0.6, i, f"{v:.1f} m", va="center", color=INK_2, fontsize=9)
+axes[1].set_xlim(0, 60)
+axes[1].set_xlabel("Mean position error (m), lower is better")
 axes[1].invert_yaxis()
 axes[1].set_yticklabels([])
-fig.suptitle("Phase 1 models vs the multitask network (test set)")
+axes[1].set_title("Position error (test set)")
 save(fig, "aml_vs_dl")
 print(cmp[["model", "building_acc", "floor_acc", "mean_error_m", "median_error_m"]].round(3).to_string(index=False))
