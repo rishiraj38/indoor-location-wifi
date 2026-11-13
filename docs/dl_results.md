@@ -14,7 +14,7 @@ The table below is from `results/aml_vs_dl.csv` and `results/dl_test_metrics.csv
 | Random Forest (per-building) | 0.998 | 0.913 | 6.19 | 5.77 | 9.37 | 7.07 | 23.31 |
 | Multitask MLP | 1.000 | 0.923 | 5.99 | 5.12 | 8.66 | 6.88 | 20.77 |
 
-The network reaches 100% building accuracy, matching Linear/Logistic and improving on the two forests (99.8%). Floor accuracy is 92.3%, which is the best of all five models; the nearest competitor is RF per-building at 91.3%. Mean position error is 8.66 m. That is better than both forests (10.22 m and 9.37 m) and almost equal to k-NN (8.69 m). The median and p95 both improve: median goes from 7.07 m (best Phase 1) to 6.88 m, and p95 drops from 23.31 m to 20.77 m. The one place the network does not stand out is the tight race with k-NN on mean error; the gap is 0.03 m, which is smaller than the variation between runs.
+The network reaches 100% building accuracy, matching Linear/Logistic and improving on the two forests (99.8%). Floor accuracy is 92.3%, which is the best of all five models; the nearest competitor is RF per-building at 91.3%. Mean position error is 8.66 m. That is better than both forests (10.22 m and 9.37 m) and almost equal to k-NN (8.69 m). Against the forests, the median and p95 both improve: median 7.07 m to 6.88 m, p95 23.31 m to 20.77 m. Against k-NN the picture is mixed: k-NN keeps the best median of all five models (5.35 m against 6.88 m) and the lower MAE in longitude (5.80 m against 5.99 m), while the network has the lower MAE in latitude and the much smaller tail (p95 20.77 m against 26.99 m). The 0.03 m gap in mean error is a tie under the project rule (differences under 0.1 m or one percentage point are a tie, see `docs/dl_architecture.md`).
 
 ## 2. Floor confusion matrices
 
@@ -46,7 +46,7 @@ F2  [   0    4  161    0 ]
 F3  [   0    0    5   80 ]
 ```
 
-Building 0 is well-separated in both models. The network is slightly weaker here (95.9% vs 97.6%), with a few more floor 0 to floor 1 errors (5 vs 1) and floor 3 to floor 2 errors (5 vs 2).
+Building 0 is well-separated in both models. The network is slightly weaker here (95.9% vs 97.6%), with a few more true floor 1 scans predicted as floor 0 (5 vs 1) and floor 3 predicted as floor 2 (5 vs 2).
 
 ### Building 1
 
@@ -74,7 +74,7 @@ F2  [   0    1   83    3 ]
 F3  [   0    0    3   44 ]
 ```
 
-Building 1 was Phase 1's weak spot at 79.8%, and the single biggest error was 43 scans on true floor 1 predicted as floor 2. The network improves building 1 accuracy to 84.7%. That same cell drops from 43 to 29 misclassifications. Floor 0 recognition also improves (22 to 23 correct). The improvement is real: Building 1 is the one place the network makes a clear gain over the forest.
+Building 1 was Phase 1's weak spot at 79.8%, and the single biggest error was 43 scans on true floor 1 predicted as floor 2. The network improves building 1 accuracy to 84.7%. That same cell drops from 43 to 29 misclassifications. Floor 0 recognition also improves (22 to 23 correct). This is the largest gain the network makes over the forest.
 
 ### Building 2
 
@@ -136,19 +136,19 @@ From `results/dl_breakdown_phone.csv` and `results/breakdown_phone_rf.csv`.
 | 20 | 213 | 13.24 | 11.61 | 0.892 | 0.892 |
 | 21 | 60 | 12.29 | 10.49 | 0.967 | 0.967 |
 
-The best phone is phone 9 (MLP 6.65 m, RF 6.23 m) and the worst is phone 14 (MLP 15.19 m, RF 16.32 m). Phone 14 is hard for both models; the network does slightly better there. Phone 20 is the second-hardest and the network closes that gap too (13.24 m to 11.61 m). The network underperforms the forest on phones 2 (10.13 vs 9.77 m) and 5 (10.40 vs 8.94 m). Phone 5 has only 17 test scans, so this may be noise. Overall the spread across phones (6.65 m to 15.19 m) is similar to Phase 1 (6.23 m to 16.32 m), so the network is not noticeably more or less sensitive to the phone model than the forest is.
+The best phone is phone 9 (MLP 6.66 m, RF 6.23 m) and the worst is phone 14 (MLP 15.19 m, RF 16.32 m). Phone 14 is hard for both models; the network does slightly better there. Phone 20 is the second-hardest and the network closes that gap too (13.24 m to 11.61 m). The network is behind the forest on five phones: 2 (10.13 vs 9.77 m), 4 (7.27 vs 7.18 m), 5 (10.40 vs 8.94 m), 9 (6.66 vs 6.23 m) and 15 (7.92 vs 7.72 m); apart from phone 5, which has only 17 test scans, these gaps are under 0.5 m. Overall the spread across phones (6.66 m to 15.19 m) is similar to Phase 1 (6.23 m to 16.32 m), so the network is not noticeably more or less sensitive to the phone model than the forest is.
 
 ## 5. Error map and training curve
 
 ### Error map (`results/figures/dl_error_map.png`)
 
-The map shows test scan positions coloured by error, capped at 30 m. Most dots are light blue, meaning errors under 10 m. The largest errors (grey lines) are scattered across all three buildings with no single tight cluster. A few are near building boundaries, which is expected for any model that can confuse signals from adjacent buildings. The worst cases show the prediction landing in a completely different part of the campus. This pattern matches `error_map_rf.png`, where the same boundary regions caused the biggest jumps. The network's error map is visibly sparser in dark red dots, consistent with the lower mean and p95.
+The map shows test scan positions coloured by error, capped at 30 m. Most dots are light blue, meaning errors under 10 m. The largest errors (grey lines) are scattered across all three buildings with no single tight cluster. A few are near building boundaries, which is expected for any model that can confuse signals from adjacent buildings. Because the building is right for every test scan, every grey line stays inside its own building; the worst cases are predictions on the wrong floor or at the wrong end of a corridor, not in another building. In `error_map_rf.png` the two building-wrong scans show as lines that cross the campus. The network's map has fewer dark blue dots (errors near or above 30 m), consistent with the lower mean and p95.
 
 ### Training curve (`results/figures/dl_training_curve.png`)
 
-The network trained for 108 epochs before early stopping triggered, out of a maximum of 300. The train and validation losses fall together for the first 50 or so epochs, then the validation loss flattens while the train loss keeps decreasing slowly. The two curves do not diverge badly; there is a small gap by epoch 108 but nothing that looks like serious overfitting. Early stopping restored the best validation weights, so the prediction uses the network at the point where the gap started to widen. The plateau on the validation curve is what stops training, not a rising validation loss, which means the model had largely converged before the patience counter ran out.
+The network trained for 108 epochs before early stopping triggered, out of a maximum of 300. Both losses drop steeply in the first five epochs and are nearly flat after about epoch 10, with only a slow drift down after that. The validation loss sits below the training loss for the whole run; that is normal with dropout, because dropout is active when the training loss is measured and off when the validation loss is measured. The two curves never diverge, so there is no sign of overfitting. Training stopped because the validation loss had not improved by more than the minimum step for 30 epochs (patience 30), so the best epoch was 78, and early stopping restored the weights from that epoch.
 
 ## 6. What changed from Phase 1 to Phase 2
 
-The main gain is floor accuracy: 91.3% (RF per-building) to 92.3% (MLP). The biggest single improvement is Building 1, where the forest's most common mistake (43 floor 1 predicted as floor 2) fell to 29 with the network. Position error also improved modestly: 9.37 m down to 8.66 m on average, and the tail (p95) dropped by about 2.5 m. The shared trunk is the likely reason: by learning building, floor, and position together, the trunk can pick up signal patterns that help all three. The forest trains three separate problems and cannot share what it learns about floor geometry with the position prediction. The network's one clear weakness is that it needs more than a minute to train from scratch; the forest takes under 4 seconds.
+The main gain is floor accuracy: 91.3% (RF per-building) to 92.3% (MLP). The biggest single improvement is Building 1, where the forest's most common mistake (43 floor 1 predicted as floor 2) fell to 29 with the network. Position error also improved modestly: 9.37 m down to 8.66 m on average, and the tail (p95) dropped by about 2.5 m. The shared trunk is the likely reason: by learning building, floor, and position together, the trunk can pick up signal patterns that help all three. The forest trains three separate problems and cannot share what it learns about floor geometry with the position prediction. The network's cost is training time: it needs 108 epochs through the training set, while the forest fits in under 4 seconds (`fit_seconds` in `results/test_metrics.csv`).
 

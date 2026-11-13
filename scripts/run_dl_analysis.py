@@ -111,7 +111,7 @@ for i, v in enumerate(cmp.building_floor_acc * 100):
 axes[0].set_xlim(80, 100)
 axes[0].set_xlabel("Building + floor correct (%)")
 axes[0].invert_yaxis()
-axes[0].set_title("Floor accuracy (test set)")
+axes[0].set_title("Building + floor accuracy (test set)")
 axes[1].barh(labels, cmp.mean_error_m, color=SERIES[0], height=0.6)
 for i, v in enumerate(cmp.mean_error_m):
     axes[1].text(v + 0.6, i, f"{v:.1f} m", va="center", color=INK_2, fontsize=9)
