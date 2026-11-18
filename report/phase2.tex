@@ -34,7 +34,10 @@ floor (5-class softmax) and coordinates (2-output linear regression). Training u
 optimiser with a combined cross-entropy and mean-squared-error loss, weight decay and early
 stopping on a held-out 10\% of the training scans. Hyperparameters are chosen by 5-fold
 GroupKFold cross-validation by user; the official validation file is used once as the test set.
-% TODO (Rishi): fill in the final test numbers once the test run is confirmed.
+On the test set the network reaches 100\% building accuracy, 92.3\% floor accuracy, 8.66\,m mean
+position error and a 95th-percentile error of 20.77\,m, the best of the five models on four of the
+five metrics; it ties $k$-NN on mean error and $k$-NN keeps the lowest median. A regularisation
+sweep, ablations and two hybrid models back each design choice with a cross-validated number.
 \end{abstract}
 
 \begin{IEEEkeywords}
@@ -305,18 +308,220 @@ the test set after all choices are fixed. Using it at any earlier stage would be
 
 %% -------------------------------------------------------------------------
 \section{Results}
+\label{sec:results}
 %% -------------------------------------------------------------------------
-% written by Rishi from the results files
+
+All numbers in this section come from the CSV files in \texttt{results/}. Cross-validation (CV)
+numbers are 5-fold GroupKFold by user on the training file; test numbers are from the single run
+on the official validation file with the final settings of Section~\ref{sec:method}.
+
+\subsection{Comparison with the Phase~1 models}
+
+Table~\ref{tab:test} compares the network with the four Phase~1 models on the official test set,
+using the same split and the same metrics (\texttt{results/aml\_vs\_dl.csv}). The network has the
+best building accuracy (100\%), the best floor accuracy (92.3\%, one point above the per-building
+Random Forest) and the smallest error tail (p95 of 20.77\,m against 23.31\,m for the forest and
+26.99\,m for $k$-NN). On mean position error it ties $k$-NN (8.66\,m against 8.69\,m, a gap below
+the 0.1\,m noise level used throughout the project) and improves on both forests. $k$-NN keeps the
+lowest median (5.35\,m against 6.88\,m): when a close fingerprint exists it is very precise, but
+when none exists it is far off, which is why its tail is the longest.
+
+\begin{table}[t]
+\centering
+\caption{Official test set (1{,}111 scans). Best value per column in bold.}
+\label{tab:test}
+\footnotesize
+\setlength{\tabcolsep}{4pt}
+\begin{tabular}{@{}lrrrrr@{}}
+\toprule
+Model & Build. & Floor & Mean & Median & p95 \\
+\midrule
+Linear + Logistic & \textbf{100.0\%} & 88.7\% & 51.99\,m & 37.53\,m & 141.9\,m \\
+$k$-NN ($k=5$) & 99.7\% & 90.1\% & 8.69\,m & \textbf{5.35\,m} & 26.99\,m \\
+Random Forest & 99.8\% & 90.9\% & 10.22\,m & 7.63\,m & 27.42\,m \\
+RF per building & 99.8\% & 91.3\% & 9.37\,m & 7.07\,m & 23.31\,m \\
+Multitask MLP & \textbf{100.0\%} & \textbf{92.3\%} & \textbf{8.66\,m} & 6.88\,m & \textbf{20.77\,m} \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+In cross-validation, where every fold is a set of unseen users, the gap is clearer: the network
+reaches 83.1\% floor accuracy and 11.17\,m, against 74.1\% and 11.78\,m for $k$-NN and 71.3\% and
+13.55\,m for the per-building forest. All CV numbers are worse than the test numbers for every
+model, because holding out whole users is a stricter test than the official file, whose users
+overlap in location with the training walks.
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=\columnwidth]{aml_vs_dl}
+\caption{Phase~1 models and the Phase~2 network on the official test set.}
+\label{fig:cmp}
+\end{figure}
+
+\subsection{Regularisation sweep}
+
+Table~\ref{tab:reg} summarises the 18-run sweep over input scaler, dropout and weight decay on the
+final trunk (\texttt{results/dl\_regularisation.csv}). Input scaling is the largest lever: with
+min-max scaling every setting lies between 11.2 and 12.4\,m, with standard scaling between 20.5
+and 24.3\,m, and with powed scaling between 13.8 and 19.4\,m. Within min-max scaling, dropout and
+weight decay each help a little alone and most together (12.40\,m with neither, 11.17\,m with
+both). Dropout 0.5 with weight decay ties 0.3 (11.17\,m), so the earlier value is kept. The
+settings we started from survived the sweep.
+
+\begin{table}[t]
+\centering
+\caption{Regularisation sweep, min-max scaled inputs, CV by user.}
+\label{tab:reg}
+\small
+\begin{tabular}{@{}ccrr@{}}
+\toprule
+Dropout & Weight decay & Floor & Mean error \\
+\midrule
+0   & 0      & 82.5\% & 12.40\,m \\
+0   & $10^{-4}$ & 81.3\% & 12.18\,m \\
+0.3 & 0      & 82.1\% & 11.76\,m \\
+\textbf{0.3} & $\mathbf{10^{-4}}$ & \textbf{83.1\%} & \textbf{11.17\,m} \\
+0.5 & 0      & 81.4\% & 11.77\,m \\
+0.5 & $10^{-4}$ & 83.0\% & 11.17\,m \\
+\midrule
+\multicolumn{2}{@{}l}{Standard scaling, any setting} & 73--76\% & 20.5--24.3\,m \\
+\multicolumn{2}{@{}l}{Powed scaling, any setting} & 78--83\% & 13.8--19.4\,m \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{Ablations}
+
+Each ablation starts from the final settings and changes one thing
+(\texttt{results/dl\_ablations.csv}; this sweep was run on a second machine, where the baseline
+is 82.9\% floor and 11.08\,m). Table~\ref{tab:abl} lists the four that matter. Three single-task
+networks of the same trunk size lose 0.4\,m on position and tie on floor, while gaining 1.8 points
+on building. Equal loss weights cost 2.3\,m. A single 256-unit trunk costs 4.8\,m. Replacing early
+stopping with a fixed 100-epoch cap costs 0.5\,m. Every part of the final model costs something
+when removed.
+
+\begin{table}[t]
+\centering
+\caption{Ablations from the final settings, CV by user.}
+\label{tab:abl}
+\footnotesize
+\setlength{\tabcolsep}{4pt}
+\begin{tabular}{@{}lrrr@{}}
+\toprule
+Setting & Build. & Floor & Mean error \\
+\midrule
+Final model (multitask, 1024-512-256) & 96.5\% & 82.9\% & 11.08\,m \\
+Three single-task networks & 98.3\% & 83.2\% & 11.50\,m \\
+Loss weights $(1,1,1)$ & 98.5\% & 81.7\% & 13.35\,m \\
+Trunk 256 only & 95.6\% & 82.6\% & 15.89\,m \\
+100-epoch cap, no early stopping & 96.5\% & 82.4\% & 11.57\,m \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{Hybrid models}
+
+Hybrid~A feeds the 256-dimensional trunk output into per-building Random Forests; Hybrid~B uses
+the network for building and floor and a forest on the raw signals for the coordinates
+(\texttt{results/hybrid.csv}). In cross-validation Hybrid~A ties the network alone (83.0\% and
+11.05\,m against 82.9\% and 11.08\,m) and clearly beats the forest alone (72.1\%, 14.47\,m). On
+the test file it is the best model we trained (7.75\,m mean, 5.73\,m median), but the project rule
+is that a hybrid is only claimed when it clearly beats both of its parts in cross-validation, and
+choosing it on the strength of its test score would be the leakage we avoided everywhere else.
+Hybrid~B inherits the forest's coordinate error (14.47\,m) and adds nothing. We therefore report
+the plain network as the Phase~2 model.
+
+\subsection{Error analysis}
+
+\textbf{Training curve.} Fig.~\ref{fig:curve} shows the final training run. The validation loss on
+the random 10\% sample falls smoothly, reaches its minimum at epoch~78 and triggers early
+stopping at epoch~108.
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=0.9\columnwidth]{dl_training_curve}
+\caption{Training and early-stopping validation loss of the final run.}
+\label{fig:curve}
+\end{figure}
+
+\textbf{Floor confusion.} Fig.~\ref{fig:conf} shows the floor confusion matrix per building. As in
+Phase~1, almost every mistake is between neighbouring floors. The largest change is in building~1,
+Phase~1's weak spot: floor accuracy rises from 79.8\% to 84.7\%, and the single worst cell (true
+floor~1 predicted as floor~2) drops from 43 to 29 scans. Building~2 improves from 91.8\% to
+94.0\%; building~0 is slightly worse (97.6\% to 95.9\%).
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=\columnwidth]{dl_confusion_floor}
+\caption{Floor confusion matrices of the network on the test set, one per building.}
+\label{fig:conf}
+\end{figure}
+
+\textbf{Error by building and floor correctness.} The network gets the building right for every
+test scan. For the 1{,}026 scans with building and floor both right the mean error is 7.99\,m
+(85\% of the total error); for the 85 scans with the floor wrong it is 16.74\,m (15\%). Floor
+mistakes are 8\% of the scans but 15\% of the error, so floor remains the most valuable thing to
+improve. The two building errors of the Phase~1 forest, which cost over 100\,m each, are gone.
+
+\textbf{Error by phone.} Mean error ranges from 6.66\,m on the best test phone to 15.19\,m on the
+worst (phone~14, 28 scans). The spread is almost the same as for the Phase~1 forest (6.23 to
+16.32\,m), so the network is neither more nor less sensitive to the phone model than the forest.
+The error map in Fig.~\ref{fig:map} shows the same picture spatially: the large errors cluster on
+floors~1 and~2 of building~1.
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=0.9\columnwidth]{dl_error_map}
+\caption{Position error of the network on the test set, drawn at the true position.}
+\label{fig:map}
+\end{figure}
 
 %% -------------------------------------------------------------------------
 \section{Discussion}
 %% -------------------------------------------------------------------------
-% written by Rishi from the results files
+
+\textbf{What the network gains.} Against the strongest Phase~1 baselines the network wins on floor
+(92.3\% against 91.3\%), ties on mean position error with $k$-NN, and shortens the error tail by
+about a quarter. In the stricter user-grouped cross-validation it leads on every metric. The
+ablations show where the gain comes from: the wide trunk and the coordinate loss weight are the
+two decisions that matter most, early stopping and the shared trunk matter less but still count.
+
+\textbf{What it does not gain.} The network does not beat $k$-NN on the median. $k$-NN is a
+lookup in a dense radio map, and when a near-identical fingerprint exists it is hard to beat.
+The network also loses 1.8 points of building accuracy to single-task training in cross-validation,
+the known cost of sharing a trunk between tasks, although on the test file building accuracy is
+100\%.
+
+\textbf{Three lessons.} First, input scaling matters more than any regulariser: the textbook
+choice, standardisation, doubles the error on this data because 96.5\% of the entries are the
+not-heard constant. Second, loss balance is not optional in multitask regression: with equal
+weights the coordinate head is under-trained by more than two metres. Third, the early-stopping
+check must be smooth: one or two held-out users give a curve too noisy to stop on, while a random
+10\% of training scans works, and keeps the test file untouched.
+
+\textbf{Limits.} The comparison with published deep learning results on this dataset is not
+exact, because most of them tune on the official validation file that we use as a test set. Our
+floor accuracy (92.3\%) is above the Kim~\emph{et al.} network (91.27\%) and below CNNLoc
+(94.68\% at 11.78\,m), while our position error (8.66\,m) is lower than both. All training was done
+on laptop CPUs, which limited the sweeps to a few hundred runs in total.
 
 %% -------------------------------------------------------------------------
 \section{Conclusion and Future Work}
 %% -------------------------------------------------------------------------
-% written by Rishi from the results files
+
+We replaced the three separate Phase~1 models with one multitask MLP that predicts building, floor
+and position from the same shared trunk. Every setting was chosen by 5-fold cross-validation
+grouped by user, and the official test file was used once. On that file the network reaches 100\%
+building accuracy, 92.3\% floor accuracy, 8.66\,m mean position error and a 20.77\,m 95th
+percentile, the best of the five models on four of the five metrics. A regularisation sweep,
+four ablations and two hybrid models back each design choice with a cross-validated number, and
+a hybrid that only wins on the test file is reported but not claimed.
+
+Three directions follow from the error analysis. Correct each phone's signal strengths towards a
+reference phone before prediction, since the best and worst test phones differ by a factor of two.
+Predict the building first and then use per-building heads, the trick that helped the forest in
+Phase~1 and that a shared trunk makes cheap. Collect more scans on floors~1 and~2 of building~1,
+where almost all floor mistakes of both phases occur.
 
 \section*{Team Contributions}
 \begin{tabular}{@{}p{0.27\columnwidth}p{0.66\columnwidth}@{}}
