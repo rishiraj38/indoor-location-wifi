@@ -5,7 +5,7 @@ Owner: Yash Raj.
 
 Trains the final multitask network once on all training data, predicts the
 official test file once, and writes:
-  results/dl_test_metrics.csv, results/dl_breakdown_*.csv
+  results/dl_test_metrics.csv, results/dl_breakdown_*.csv, results/dl_training_history.csv
   results/figures/dl_confusion_floor.png, dl_error_map.png, dl_training_curve.png,
   results/figures/aml_vs_dl.png and results/aml_vs_dl.csv
 """
@@ -45,8 +45,9 @@ print({k: round(v, 3) for k, v in metrics.items()})
 hierarchical_breakdown(yte, pred).to_csv(RES / "dl_breakdown_hierarchical.csv", index=False)
 per_group_error(yte, pred, mte["PHONEID"]).to_csv(RES / "dl_breakdown_phone.csv", index=False)
 
-# training curve
+# training curve, and the per-epoch losses behind it
 h = pd.DataFrame(model.history_)
+h.to_csv(RES / "dl_training_history.csv", index=False)
 fig, ax = plt.subplots(figsize=(6, 3.5))
 ax.plot(h.epoch, h.train_loss, label="train", color=SERIES[0])
 ax.plot(h.epoch, h.val_loss, label="validation (random 10%)", color=SERIES[1])
